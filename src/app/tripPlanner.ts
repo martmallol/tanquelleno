@@ -24,14 +24,48 @@ export type CarSelection =
 export interface TripAdvanced {
   /** Consumo manual en L/100 km (pisa el del catálogo). */
   consumptionLper100?: number | null;
-  /** Precio manual de la nafta en ARS/L (pisa el promedio del recorrido). */
-  pricePerLiter?: number | null;
+  /**
+   * Nº de personas a bordo (incluido el conductor). El peso extra sube el
+   * consumo. Base = 1 (solo el conductor); no afecta si es 1.
+   */
+  passengers?: number | null;
+  /** Equipaje / auto muy cargado: suma consumo por peso. */
+  heavyLoad?: boolean;
+  /** Aire acondicionado gran parte del viaje: suma consumo. */
+  airConditioning?: boolean;
+}
+
+/**
+ * Factor multiplicador del consumo según carga del auto (pasajeros, equipaje,
+ * A/C). Valores conservadores basados en rangos típicos: cada pasajero extra
+ * ~+2.5%, equipaje pesado ~+4%, A/C ~+6%. No hay dato del surtidor acá: es
+ * corrección de consumo del propio vehículo.
+ */
+export function loadFactor(adv: TripAdvanced | undefined): number {
+  if (!adv) return 1;
+  let f = 1;
+  const extraPax = Math.max(0, (adv.passengers ?? 1) - 1);
+  f += extraPax * 0.025;
+  if (adv.heavyLoad) f += 0.04;
+  if (adv.airConditioning) f += 0.06;
+  // Techo razonable: no más de +25% por estos factores combinados.
+  return Math.min(f, 1.25);
+}
+
+/**
+ * Parada intermedia. `onReturn` decide si también se visita en la vuelta
+ * (solo aplica cuando el viaje es ida y vuelta): así una parada puede hacerse
+ * solo a la ida, o a la ida y a la vuelta.
+ */
+export interface TripStop {
+  placeId: string;
+  onReturn: boolean;
 }
 
 export interface TripInput {
   originId: string;
   destinationId: string;
-  stopIds: string[];
+  stops: TripStop[];
   roundTrip: boolean;
   car: CarSelection;
   advanced?: TripAdvanced;
@@ -81,23 +115,48 @@ export async function planTrip(services: Services, input: TripInput): Promise<Tr
     resolvePlace(services, input.destinationId, 'el destino'),
   ]);
   const stops = await Promise.all(
-    input.stopIds.map((id) => resolvePlace(services, id, 'una parada')),
+    input.stops.map(async (s) => ({
+      place: await resolvePlace(services, s.placeId, 'una parada'),
+      onReturn: s.onReturn,
+    })),
   );
 
   let car = await resolveCar(services, input.car);
+  const adv = input.advanced;
 
-  // Consumo manual de "Ajustes avanzados": pisa el del catálogo/categoría.
-  const manualConsumption = input.advanced?.consumptionLper100;
-  if (manualConsumption != null && manualConsumption > 0) {
-    car = {
-      ...car,
-      consumptionLper100: manualConsumption,
-      estimatedConsumption: false,
-      manualConsumption: true,
-    };
-  }
+  // Consumo base: manual de "Ajustes avanzados" si lo cargaron, o el del auto.
+  const manual = adv?.consumptionLper100;
+  const baseConsumption = manual != null && manual > 0 ? manual : car.consumptionLper100;
 
-  const route = await services.directions.route(origin, stops, destination, input.roundTrip);
+  // Corrección por carga del auto (pasajeros, equipaje, A/C).
+  const factor = loadFactor(adv);
+  const effectiveConsumption = baseConsumption * factor;
+
+  car = {
+    ...car,
+    consumptionLper100: effectiveConsumption,
+    estimatedConsumption: manual != null && manual > 0 ? false : car.estimatedConsumption,
+    manualConsumption: manual != null && manual > 0,
+    loadAdjusted: factor > 1,
+  };
+
+  const outboundStops = stops.map((s) => s.place);
+  const returnStops = stops.filter((s) => s.onReturn).map((s) => s.place);
+
+  // Si es ida y vuelta y alguna parada NO se repite en la vuelta, la ruta es
+  // asimétrica: la armamos explícita en una sola pasada
+  // (origen → paradas ida → destino → paradas de vuelta → origen).
+  // Si es simétrica (todas las paradas se repiten) o es solo ida, usamos el
+  // camino directo y dejamos que roundTrip duplique (más simple y eficiente).
+  const asymmetric = input.roundTrip && !stops.every((s) => s.onReturn);
+  const route = asymmetric
+    ? await services.directions.route(
+        origin,
+        [...outboundStops, destination, ...returnStops],
+        origin,
+        false,
+      )
+    : await services.directions.route(origin, outboundStops, destination, input.roundTrip);
 
   const [stations, refPrices, tolls] = await Promise.all([
     services.stations.stationsAlongRoute(route, car.suggestedFuel),
@@ -105,12 +164,5 @@ export async function planTrip(services: Services, input: TripInput): Promise<Tr
     services.tolls.estimateTolls(route),
   ]);
 
-  return computeTrip({
-    route,
-    car,
-    stations,
-    referencePrices: refPrices,
-    tolls,
-    priceOverride: input.advanced?.pricePerLiter ?? null,
-  });
+  return computeTrip({ route, car, stations, referencePrices: refPrices, tolls });
 }

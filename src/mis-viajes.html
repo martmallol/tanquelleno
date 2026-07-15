@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="es-AR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>KmxKm — Mis viajes</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700;12..96,800&family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<div class="page">
+  <nav class="nav page-nav">
+    <a class="nav-brand" href="index.html">
+      <span class="nav-logo">km</span>
+      <span class="nav-wordmark">KmxKm</span>
+    </a>
+    <div class="nav-links">
+      <a href="como-funciona.html">Cómo funciona</a>
+      <a href="precios.html">Precios de nafta</a>
+      <a href="mis-viajes.html" class="active">Mis viajes</a>
+    </div>
+  </nav>
+
+  <header class="page-hero">
+    <h1 class="page-title">Mis viajes</h1>
+    <p class="page-lead">Los viajes que guardaste. Tocá uno para volver a abrir su resultado.</p>
+  </header>
+
+  <main class="page-body">
+    <div class="saved-list" data-saved></div>
+    <a class="page-cta" href="index.html">Planear un viaje nuevo →</a>
+  </main>
+</div>
+
+<script type="module" src="./entries/mis-viajes.ts"></script>
+</body>
+</html>

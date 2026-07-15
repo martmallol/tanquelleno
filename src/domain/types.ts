@@ -112,10 +112,12 @@ export interface Station {
   /** Precio de la nafta sugerida en esta estación (exacto o estimado). */
   price: FuelPrice;
   /**
-   * Nº de pin en el mapa y en las cards (1..n, en orden de plan de cargas).
+   * Etiqueta del pin en el mapa y en las cards. Solo las estaciones que sirven
+   * para una carga la tienen, en formato "carga.opción" ("1.1", "1.2", "2.1").
+   * Las de backup (no caen en ninguna ventana de carga) quedan sin etiqueta.
    * Lo asigna computeTrip al armar los grupos de carga.
    */
-  seq?: number;
+  seq?: string;
 }
 
 /**
@@ -170,8 +172,6 @@ export interface TripPlan {
   extraStations: Station[];
   /** Peajes estimados del recorrido, en ARS. */
   tolls: number;
-  /** true si el precio por litro fue fijado a mano en "Ajustes avanzados". */
-  priceOverridden: boolean;
 }
 
 /**
@@ -189,4 +189,6 @@ export interface TripCar {
   estimatedConsumption: boolean;
   /** true si el consumo fue fijado a mano en "Ajustes avanzados". */
   manualConsumption?: boolean;
+  /** true si se aplicó corrección por carga (pasajeros/equipaje/A-C). */
+  loadAdjusted?: boolean;
 }

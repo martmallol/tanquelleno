@@ -186,20 +186,36 @@ button {
    INICIO (hero crepúsculo)
    ============================================================ */
 
+/*
+  Como en la fig 1a de Claude Design: el hero tiene ALTURA NATURAL (el contenido
+  la define), NO 100vh. El gradiente atardecer cubre todo el bloque y las lomas
+  se apoyan cerca del final, debajo de la form card. min-height como piso para
+  que el paisaje respire aunque el contenido sea corto.
+*/
 .hero {
   position: relative;
-  min-height: 100vh;
+  min-height: 860px;
   background: var(--grad-hero);
   overflow: hidden;
-  padding: 0 0 56px;
+  padding: 0 0 120px;
 }
 
-.hero-lomas { position: absolute; inset: 0; pointer-events: none; }
+/* Las lomas se anclan al fondo del hero (bottom), no a un top fijo, para que
+   sigan visibles sin importar la altura real del bloque. */
+.hero-lomas {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 300px;
+  pointer-events: none;
+  overflow: hidden;
+}
 
 .loma-a {
   position: absolute;
   left: -8%;
-  top: 560px;
+  bottom: 40px;
   width: 75%;
   height: 200px;
   background: var(--loma-1);
@@ -210,7 +226,7 @@ button {
 .loma-b {
   position: absolute;
   right: -14%;
-  top: 585px;
+  bottom: 40px;
   width: 80%;
   height: 190px;
   background: var(--loma-2);
@@ -221,9 +237,9 @@ button {
 .loma-base {
   position: absolute;
   left: -5%;
-  top: 640px;
+  bottom: 0;
   width: 120%;
-  height: 100%;
+  height: 90px;
   background: var(--navy-900);
 }
 
@@ -231,7 +247,7 @@ button {
   position: absolute;
   left: 0;
   right: 0;
-  top: 700px;
+  bottom: 70px;
   border-top: 2.5px dashed rgba(248, 166, 130, 0.35);
 }
 
@@ -347,12 +363,18 @@ button {
   .nav { padding: 20px 22px 0; }
   .nav-links { display: none; }
 
-  .hero { padding-bottom: 0; display: flex; flex-direction: column; }
+  .hero {
+    min-height: 100vh;
+    padding-bottom: 0;
+    display: flex;
+    flex-direction: column;
+  }
 
-  .loma-a { left: -12%; top: 600px; width: 80%; height: 130px; }
-  .loma-b { right: -16%; top: 618px; width: 85%; height: 120px; }
-  .loma-base { top: 655px; }
-  .hero-ruta { top: 690px; }
+  .hero-lomas { height: 200px; }
+  .loma-a { left: -12%; bottom: 30px; width: 80%; height: 130px; }
+  .loma-b { right: -16%; bottom: 30px; width: 85%; height: 120px; }
+  .loma-base { height: 60px; }
+  .hero-ruta { bottom: 50px; }
 
   .hero-copy { text-align: left; padding: 24px 22px 0; }
   .hero-title { font-size: 30px; line-height: 1.12; }
@@ -1233,38 +1255,98 @@ button {
 
 .advanced-panel {
   display: flex;
-  gap: 20px;
-  align-items: baseline;
+  gap: 22px;
+  align-items: center;
   flex-wrap: wrap;
   margin-top: 12px;
-  padding: 14px 16px;
+  padding: 14px 18px;
   background: var(--bg-soft);
   border-radius: 14px;
 }
 
 .advanced-field {
   display: flex;
-  flex-direction: column;
-  gap: 5px;
+  align-items: center;
+  gap: 8px;
 }
 
 .advanced-label {
-  font: 700 10.5px var(--font-body);
-  color: var(--text-muted);
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  font: 700 12px var(--font-body);
+  color: var(--text-secondary);
 }
 
-.advanced-input-wrap {
+.advanced-mini { font: 500 12px var(--font-body); color: var(--text-muted); }
+
+/* Stepper de pasajeros */
+.stepper {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-strong);
+  border-radius: 10px;
+  padding: 2px;
+}
+
+.stepper-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  display: grid;
+  place-items: center;
+  font: 700 16px var(--font-body);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.stepper-btn:hover { background: var(--bg-soft); color: var(--accent-deep); }
+
+.stepper-val {
+  min-width: 26px;
+  text-align: center;
+  font: 700 14px var(--font-display);
+  color: var(--text-main);
+}
+
+/* Checkboxes de carga / A-C */
+.advanced-check {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
+  font: 500 13px var(--font-body);
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+.advanced-check input {
+  width: 17px;
+  height: 17px;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
+/* Consumo experto (details) */
+.advanced-expert {
   font: 500 12.5px var(--font-body);
   color: var(--text-secondary);
 }
 
+.advanced-expert summary {
+  cursor: pointer;
+  color: var(--accent-deep);
+  font-weight: 600;
+}
+
+.advanced-expert .advanced-input-wrap {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+}
+
 .advanced-input-wrap input {
-  width: 90px;
+  width: 100px;
   background: var(--bg-card);
   border: 1px solid var(--border-strong);
   border-radius: 9px;
@@ -1286,10 +1368,15 @@ button {
   .advanced-panel {
     background: var(--bg-card);
     box-shadow: 0 6px 18px rgba(10, 14, 40, 0.25);
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 14px;
   }
 }
 
-/* ---- Reordenar paradas ---- */
+/* ---- Reordenar paradas + ida/vuelta por parada ---- */
+
+.chip-stop { display: inline-flex; align-items: center; gap: 5px; }
 
 .stop-move {
   cursor: pointer;
@@ -1299,6 +1386,24 @@ button {
 }
 
 .stop-move:hover { color: var(--accent-deep); }
+
+.stop-return {
+  cursor: pointer;
+  font: 600 10px var(--font-body);
+  border-radius: 999px;
+  padding: 1px 7px;
+  background: rgba(20, 27, 59, 0.08);
+  color: var(--text-muted);
+  white-space: nowrap;
+  transition: background 0.15s, color 0.15s;
+}
+
+.stop-return.on {
+  background: var(--badge-green-bg);
+  color: var(--badge-green-text);
+}
+
+.stop-return:hover { filter: brightness(0.96); }
 
 /* ---- Grupos de estaciones por carga (estilo GasBuddy) ---- */
 
@@ -1315,9 +1420,10 @@ button {
 }
 
 .station-seq {
-  width: 22px;
+  min-width: 26px;
   height: 22px;
-  border-radius: 50%;
+  padding: 0 6px;
+  border-radius: 999px;
   background: var(--navy-800);
   color: #fff;
   display: grid;
@@ -1325,6 +1431,31 @@ button {
   font: 700 11px var(--font-body);
   flex: none;
 }
+
+/* Cards del grupo backup: sin número, un poco más tenues */
+.stations-group-backup .station-card { opacity: 0.92; }
+
+/* ---- QR de navegación (Google Maps) ---- */
+
+.nav-qr {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  background: var(--bg-card);
+  border: 1px solid var(--border-soft);
+  border-radius: 16px;
+  padding: 14px 16px;
+}
+
+.nav-qr-img {
+  width: 92px;
+  height: 92px;
+  flex: none;
+  border-radius: 8px;
+}
+
+.nav-qr-title { font: 700 14px var(--font-display); color: var(--text-main); }
+.nav-qr-sub { margin-top: 4px; font: 500 12px/1.45 var(--font-body); color: var(--text-secondary); }
 
 .station-card { cursor: pointer; transition: border-color 0.15s, box-shadow 0.15s; }
 .station-card:hover { border-color: var(--accent-soft); }
@@ -1340,13 +1471,25 @@ button {
 .station-pin {
   display: grid;
   place-items: center;
-  width: 26px;
-  height: 26px;
-  border-radius: 50%;
+  min-width: 28px;
+  height: 28px;
+  padding: 0 5px;
+  border-radius: 999px;
   border: 2px solid #fffdfa;
   color: #fff;
   font: 700 11.5px var(--font-body);
   box-shadow: 0 2px 6px rgba(20, 27, 59, 0.35);
+  white-space: nowrap;
+}
+
+/* Pin de estación de backup: chico, redondo, tenue, sin número */
+.station-pin-backup {
+  min-width: 0;
+  width: 16px;
+  height: 16px;
+  padding: 0;
+  border-width: 2px;
+  opacity: 0.75;
 }
 
 .map-popup-num {
@@ -1427,4 +1570,219 @@ button {
   .stations-group { page-break-inside: avoid; }
 
   .map-note { display: none; }
+
+  /* QR de navegación: prominente y sin cortar */
+  .nav-qr {
+    border: 1px solid #bbb;
+    page-break-inside: avoid;
+    margin-top: 12px;
+  }
+
+  .nav-qr-img { width: 120px; height: 120px; }
+}
+
+/* ============================================================
+   PÁGINAS DE CONTENIDO (cómo funciona, precios, mis viajes)
+   ============================================================ */
+
+.page { min-height: 100vh; background: var(--bg-base); }
+
+.page-nav {
+  background: var(--grad-header);
+  padding: 20px 48px;
+}
+
+.page-hero {
+  max-width: 880px;
+  margin: 0 auto;
+  padding: 44px 24px 8px;
+}
+
+.page-title {
+  font: 800 40px/1.1 var(--font-display);
+  color: var(--text-main);
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+
+.page-lead {
+  margin: 14px 0 0;
+  font: 500 17px/1.5 var(--font-body);
+  color: var(--text-secondary);
+  max-width: 620px;
+}
+
+.page-body {
+  max-width: 880px;
+  margin: 0 auto;
+  padding: 24px 24px 60px;
+}
+
+.page-cta {
+  display: inline-block;
+  margin-top: 28px;
+  background: var(--accent);
+  color: var(--on-accent);
+  font: 700 15px var(--font-body);
+  border-radius: 14px;
+  padding: 14px 26px;
+  transition: background 0.15s;
+}
+
+.page-cta:hover { background: var(--accent-hover); }
+
+/* Cómo funciona: pasos */
+
+.steps {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.step {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  background: var(--bg-card);
+  border: 1px solid var(--border-soft);
+  border-radius: 16px;
+  padding: 20px 22px;
+}
+
+.step-n {
+  flex: none;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: var(--on-accent);
+  display: grid;
+  place-items: center;
+  font: 800 16px var(--font-display);
+}
+
+.step-title { font: 700 17px var(--font-display); color: var(--text-main); }
+.step-text { margin: 6px 0 0; font: 500 14px/1.55 var(--font-body); color: var(--text-secondary); }
+
+.info-card {
+  margin-top: 18px;
+  background: var(--bg-soft);
+  border-radius: 16px;
+  padding: 20px 22px;
+}
+
+.info-title { margin: 0; font: 700 16px var(--font-display); color: var(--text-main); }
+.info-text { margin: 8px 0 0; font: 500 14px/1.55 var(--font-body); color: var(--text-secondary); }
+
+/* Precios */
+
+.precios-controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 18px;
+}
+
+.precios-label { font: 700 12px var(--font-body); color: var(--text-muted); letter-spacing: 0.06em; text-transform: uppercase; }
+
+.precios-select {
+  background: var(--bg-card);
+  border: 1px solid var(--border-strong);
+  border-radius: 10px;
+  padding: 10px 14px;
+  font: 600 14px var(--font-body);
+  color: var(--text-main);
+  outline: none;
+}
+
+.precios-select:focus { border-color: var(--accent); }
+.precios-status { font: 500 12.5px var(--font-body); color: var(--text-muted); }
+
+.precios-cards { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
+
+.precio-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-soft);
+  border-radius: 16px;
+  padding: 20px 22px;
+}
+
+.precio-fuel { font: 700 13px var(--font-body); color: var(--text-muted); letter-spacing: 0.06em; text-transform: uppercase; }
+.precio-value { margin-top: 8px; font: 800 40px/1 var(--font-display); color: var(--accent-deep); }
+.precio-unit { font-size: 18px; color: var(--text-muted); }
+.precio-src { margin-top: 6px; font: 500 12.5px var(--font-body); color: var(--text-muted); }
+
+.precios-empty {
+  grid-column: 1 / -1;
+  background: var(--bg-card);
+  border: 1px dashed var(--border-strong);
+  border-radius: 16px;
+  padding: 24px;
+  font: 500 14px var(--font-body);
+  color: var(--text-secondary);
+  text-align: center;
+}
+
+.precios-note { margin-top: 16px; font: 500 12.5px/1.5 var(--font-body); color: var(--text-muted); }
+
+/* Mis viajes */
+
+.saved-list { display: flex; flex-direction: column; gap: 12px; }
+
+.saved-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-soft);
+  border-radius: 16px;
+  padding: 18px 20px;
+  cursor: pointer;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.saved-card:hover {
+  border-color: var(--accent-soft);
+  box-shadow: 0 6px 18px rgba(20, 27, 59, 0.08);
+}
+
+.saved-card-main { flex: 1; min-width: 0; }
+.saved-card-title { font: 700 16px var(--font-display); color: var(--text-main); }
+.saved-card-sub { margin-top: 3px; font: 500 13px var(--font-body); color: var(--text-secondary); }
+.saved-card-date { margin-top: 6px; font: 500 11.5px var(--font-body); color: var(--text-muted); }
+
+.saved-card-del {
+  flex: none;
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+  background: var(--bg-soft);
+  color: var(--text-muted);
+  font: 600 14px var(--font-body);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.saved-card-del:hover { background: #fdecec; color: #8b1d1d; }
+
+.saved-empty {
+  background: var(--bg-card);
+  border: 1px dashed var(--border-strong);
+  border-radius: 16px;
+  padding: 32px 24px;
+  text-align: center;
+}
+
+.saved-empty-title { font: 700 17px var(--font-display); color: var(--text-main); }
+.saved-empty-text { margin: 8px auto 0; max-width: 420px; font: 500 14px/1.5 var(--font-body); color: var(--text-secondary); }
+
+@media (max-width: 760px) {
+  .page-nav { padding: 18px 22px; }
+  .page-title { font-size: 30px; }
+  .page-lead { font-size: 15px; }
+  .precios-cards { grid-template-columns: 1fr; }
 }

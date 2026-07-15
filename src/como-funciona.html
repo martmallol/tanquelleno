@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="es-AR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>KmxKm — Cómo funciona</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700;12..96,800&family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<div class="page">
+  <nav class="nav page-nav">
+    <a class="nav-brand" href="index.html">
+      <span class="nav-logo">km</span>
+      <span class="nav-wordmark">KmxKm</span>
+    </a>
+    <div class="nav-links">
+      <a href="como-funciona.html" class="active">Cómo funciona</a>
+      <a href="precios.html">Precios de nafta</a>
+      <a href="mis-viajes.html">Mis viajes</a>
+    </div>
+  </nav>
+
+  <header class="page-hero">
+    <h1 class="page-title">Cómo funciona</h1>
+    <p class="page-lead">Le decís qué auto tenés y a dónde vas. Nosotros hacemos las cuentas de la nafta con datos reales, sin que tengas que saber nada técnico.</p>
+  </header>
+
+  <main class="page-body">
+    <ol class="steps">
+      <li class="step">
+        <div class="step-n">1</div>
+        <div>
+          <div class="step-title">Elegí tu auto</div>
+          <p class="step-text">Buscalo por marca, modelo y año en nuestra base de autos que andan en Argentina. De ahí sacamos el consumo, la nafta que usa y el tamaño del tanque. ¿No está? Elegís por tipo (chico, sedán, SUV, pickup) y usamos un promedio.</p>
+        </div>
+      </li>
+      <li class="step">
+        <div class="step-n">2</div>
+        <div>
+          <div class="step-title">Marcá el recorrido</div>
+          <p class="step-text">Origen, destino y las paradas que quieras. Calculamos la ruta real por camino (no en línea recta) y la distancia exacta. Podés hacerlo ida y vuelta o solo ida.</p>
+        </div>
+      </li>
+      <li class="step">
+        <div class="step-n">3</div>
+        <div>
+          <div class="step-title">Te decimos cuánto sale y dónde cargar</div>
+          <p class="step-text">Cuántos litros vas a gastar, cuánto cuesta con Súper o Premium, cuántas veces tenés que cargar según la autonomía de tu auto, y en qué estaciones del camino conviene parar — con el precio real de cada una.</p>
+        </div>
+      </li>
+    </ol>
+
+    <section class="info-card">
+      <h2 class="info-title">¿De dónde salen los precios?</h2>
+      <p class="info-text">Del dataset oficial de <strong>Precios en surtidor</strong> (Resolución 314/2016, datos.energia.gob.ar) — la misma fuente detrás de sitios como naftas.com.ar. Cuando una estación tiene su precio cargado, lo mostramos como <span class="badge-green">precio exacto</span>. Si no, caemos al promedio de la provincia y lo marcamos como <span class="badge-muted">estimado</span> para que sepas la diferencia.</p>
+    </section>
+
+    <section class="info-card">
+      <h2 class="info-title">¿El mapa y la ruta?</h2>
+      <p class="info-text">La ruta la traza OpenStreetMap por las rutas reales, y el mapa usa sus tiles. Los pines numerados en el mapa coinciden con el plan de cargas: te decimos, en orden, dónde conviene parar a cargar.</p>
+    </section>
+
+    <a class="page-cta" href="index.html">Calcular mi viaje →</a>
+  </main>
+</div>
+
+<script type="module" src="./entries/content.ts"></script>
+</body>
+</html>

@@ -155,29 +155,6 @@ describe('computeTrip', () => {
   });
 });
 
-describe('priceOverride (Ajustes avanzados)', () => {
-  const base: ComputeTripInput = {
-    route: route(500, true),
-    car: cronos,
-    stations: [station('s1', 'super', 1600, true, 120)],
-    referencePrices: refPrices,
-    tolls: 5000,
-  };
-
-  it('el precio manual pisa el promedio de estaciones y queda marcado', () => {
-    const plan = computeTrip({ ...base, priceOverride: 2000 });
-    expect(plan.avgPricePerLiter).toBe(2000);
-    expect(plan.avgPriceEstimated).toBe(false);
-    expect(plan.priceOverridden).toBe(true);
-    expect(plan.costs[0]!.totalCost).toBeCloseTo(63 * 2000);
-  });
-
-  it('sin override no cambia nada', () => {
-    const plan = computeTrip({ ...base, priceOverride: null });
-    expect(plan.priceOverridden).toBe(false);
-    expect(plan.avgPricePerLiter).toBe(1600);
-  });
-});
 
 describe('groupStationsByRefuel (plan de cargas estilo GasBuddy)', () => {
   // Viaje 500 km ida, ida y vuelta = 1000 km, autonomía 500 → útil 450:
@@ -219,7 +196,7 @@ describe('groupStationsByRefuel (plan de cargas estilo GasBuddy)', () => {
     expect(extras.map((s) => s.id)).toEqual(['a', 'b']);
   });
 
-  it('computeTrip numera los pins: cargas primero, extras después', () => {
+  it('numera jerárquico solo las de carga (1.1, 1.2); las de backup sin número', () => {
     const plan = computeTrip({
       route: route(oneWay, true),
       car: cronos, // tanque 48 / 6.3 → autonomía 762, útil 685 → 1 carga en km 685
@@ -233,10 +210,11 @@ describe('groupStationsByRefuel (plan de cargas estilo GasBuddy)', () => {
     });
     expect(plan.refuelLegs).toHaveLength(1);
     const leg = plan.refuelLegs[0]!;
-    // más barata primero dentro de la carga → seq 1
+    // más barata primero dentro de la carga → 1.1
     expect(leg.stations[0]!.id).toBe('vuelta-400');
-    expect(leg.stations[0]!.seq).toBe(1);
-    expect(leg.stations[1]!.seq).toBe(2);
-    expect(plan.extraStations[0]!.seq).toBe(3);
+    expect(leg.stations[0]!.seq).toBe('1.1');
+    expect(leg.stations[1]!.seq).toBe('1.2');
+    // la de backup NO se numera
+    expect(plan.extraStations[0]!.seq).toBeUndefined();
   });
 });

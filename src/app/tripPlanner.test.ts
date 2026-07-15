@@ -1,12 +1,55 @@
 import { describe, expect, it } from 'vitest';
-import { planTrip, TripPlanningError, type TripInput } from './tripPlanner';
+import { planTrip, loadFactor, TripPlanningError, type TripInput } from './tripPlanner';
 import { mockServices } from '../data/mock';
 import { CARS } from '../data/mock/cars.data';
+
+describe('loadFactor (corrección de consumo por carga)', () => {
+  it('sin ajustes es 1', () => {
+    expect(loadFactor(undefined)).toBe(1);
+    expect(loadFactor({})).toBe(1);
+    expect(loadFactor({ passengers: 1 })).toBe(1);
+  });
+
+  it('cada pasajero extra suma ~2.5%', () => {
+    expect(loadFactor({ passengers: 3 })).toBeCloseTo(1.05); // 2 extra
+  });
+
+  it('equipaje y A/C suman', () => {
+    expect(loadFactor({ heavyLoad: true })).toBeCloseTo(1.04);
+    expect(loadFactor({ airConditioning: true })).toBeCloseTo(1.06);
+    expect(loadFactor({ passengers: 2, heavyLoad: true, airConditioning: true })).toBeCloseTo(1.125);
+  });
+
+  it('tiene un techo de +25%', () => {
+    expect(loadFactor({ passengers: 9, heavyLoad: true, airConditioning: true })).toBe(1.25);
+  });
+});
+
+describe('planTrip aplica ajustes avanzados', () => {
+  it('sube los litros con auto cargado', async () => {
+    const base = await planTrip(mockServices, exampleTrip);
+    const loaded = await planTrip(mockServices, {
+      ...exampleTrip,
+      advanced: { passengers: 5, heavyLoad: true, airConditioning: true },
+    });
+    expect(loaded.liters).toBeGreaterThan(base.liters);
+    expect(loaded.car.loadAdjusted).toBe(true);
+  });
+
+  it('consumo manual pisa el del catálogo', async () => {
+    const plan = await planTrip(mockServices, {
+      ...exampleTrip,
+      advanced: { consumptionLper100: 12 },
+    });
+    expect(plan.car.manualConsumption).toBe(true);
+    expect(plan.car.consumptionLper100).toBe(12);
+  });
+});
 
 const exampleTrip: TripInput = {
   originId: 'buenos-aires',
   destinationId: 'mar-del-plata',
-  stopIds: ['necochea'],
+  stops: [{ placeId: 'necochea', onReturn: true }],
   roundTrip: true,
   car: { kind: 'catalog', carId: 'fiat-cronos-1-3-2022' },
 };
@@ -69,6 +112,22 @@ describe('planTrip (integración con mocks)', () => {
     const round = await planTrip(mockServices, exampleTrip);
     const oneWay = await planTrip(mockServices, { ...exampleTrip, roundTrip: false });
     expect(oneWay.totalDistanceKm).toBeLessThan(round.totalDistanceKm);
+  });
+
+  it('parada solo-ida da una ruta más corta que la misma ida y vuelta', async () => {
+    // Necochea solo a la ida: la vuelta va directa Mar del Plata → Buenos Aires,
+    // sin desviarse por Necochea → menos km que si volviera pasando por ahí.
+    const symmetric = await planTrip(mockServices, {
+      ...exampleTrip,
+      stops: [{ placeId: 'necochea', onReturn: true }],
+    });
+    const oneWayStop = await planTrip(mockServices, {
+      ...exampleTrip,
+      stops: [{ placeId: 'necochea', onReturn: false }],
+    });
+    expect(oneWayStop.totalDistanceKm).toBeLessThan(symmetric.totalDistanceKm);
+    // Igual sigue siendo ida y vuelta (vuelve al origen).
+    expect(oneWayStop.route.waypoints[0]!.id).toBe(oneWayStop.route.waypoints.at(-1)!.id);
   });
 
   it('auto inexistente lanza TripPlanningError', async () => {

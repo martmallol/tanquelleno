@@ -37,7 +37,7 @@ function stationPopup(s: Station): string {
     ? `<span class="map-popup-badge exact">${priceStateLabel(s.price.source)}</span>`
     : `<span class="map-popup-badge">${priceStateLabel(s.price.source)}</span>`;
   const approx = s.price.exact ? '' : '≈ ';
-  const num = s.seq != null ? `<span class="map-popup-num">${s.seq}</span> ` : '';
+  const num = s.seq != null ? `<span class="map-popup-num">${escapeHtml(s.seq)}</span> ` : '';
   return `
     <div class="map-popup">
       <div class="map-popup-brand">${num}${escapeHtml(s.brand)}</div>
@@ -46,15 +46,27 @@ function stationPopup(s: Station): string {
     </div>`;
 }
 
-/** Pin numerado con el color de la bandera de la estación. */
+/**
+ * Pin con el color de la bandera. Las estaciones de una carga llevan su
+ * etiqueta ("1.1"); las de backup un pin más chico y tenue, sin número.
+ */
 function stationIcon(s: Station): L.DivIcon {
   const color = stationColor(s.brandId);
+  if (s.seq == null) {
+    return L.divIcon({
+      className: 'station-pin-wrap',
+      html: `<span class="station-pin station-pin-backup" style="background:${color}"></span>`,
+      iconSize: [16, 16],
+      iconAnchor: [8, 8],
+      popupAnchor: [0, -8],
+    });
+  }
   return L.divIcon({
     className: 'station-pin-wrap',
-    html: `<span class="station-pin" style="background:${color}">${s.seq ?? '⛽'}</span>`,
-    iconSize: [26, 26],
-    iconAnchor: [13, 13],
-    popupAnchor: [0, -12],
+    html: `<span class="station-pin" style="background:${color}">${s.seq}</span>`,
+    iconSize: [28, 28],
+    iconAnchor: [14, 14],
+    popupAnchor: [0, -13],
   });
 }
 

@@ -22,6 +22,7 @@ import {
 import { qs, qso, escapeHtml } from './dom';
 import { tripStore } from './tripStore';
 import { renderRouteMap, type RouteMapHandles } from './mapView';
+import { navQrDataUrl } from './navLink';
 import { BRAND_COLORS } from '../data/mock/stations.data';
 
 export async function initResultado(): Promise<void> {
@@ -31,9 +32,28 @@ export async function initResultado(): Promise<void> {
   try {
     const plan = await planTrip(services, tripStore.get());
     render(root, plan);
+    wireSaveButtons(plan);
   } catch (err) {
     setError(root, err instanceof Error ? err.message : 'No pudimos calcular el viaje.');
   }
+}
+
+/** Conecta los botones "Guardar" (desktop y mobile) con Mis viajes. */
+function wireSaveButtons(plan: TripPlan): void {
+  const title = routeTitle(plan);
+  const subtitle = `${plan.car.label} · ${formatARS(plan.costs[0]!.totalCost)} de nafta`;
+  document.querySelectorAll<HTMLButtonElement>('[data-save-trip], .btn-save').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      tripStore.save({ title, subtitle, trip: tripStore.get() });
+      const original = btn.textContent;
+      btn.textContent = '✓ Guardado';
+      btn.setAttribute('disabled', 'true');
+      setTimeout(() => {
+        btn.textContent = original;
+        btn.removeAttribute('disabled');
+      }, 1800);
+    });
+  });
 }
 
 // ------------------------------------------------------------------
@@ -99,16 +119,16 @@ function render(root: HTMLElement, plan: TripPlan): void {
   const legsText = plan.route.roundTrip ? 'ida y vuelta' : 'solo ida';
   const statsGrid = qso('[data-stats]', root);
   if (statsGrid) {
-    const priceNote = plan.priceOverridden
-      ? 'precio fijado a mano'
-      : plan.avgPriceEstimated
-        ? 'promedio estimado del recorrido'
-        : 'promedio en tu recorrido';
-    const litersNote = plan.car.manualConsumption
-      ? 'con tu consumo manual'
-      : plan.car.estimatedConsumption
-        ? 'estimados por categoría'
-        : 'estimados para tu auto';
+    const priceNote = plan.avgPriceEstimated
+      ? 'promedio estimado del recorrido'
+      : 'promedio en tu recorrido';
+    const litersNote = plan.car.loadAdjusted
+      ? 'ajustado por carga del auto'
+      : plan.car.manualConsumption
+        ? 'con tu consumo manual'
+        : plan.car.estimatedConsumption
+          ? 'estimados por categoría'
+          : 'estimados para tu auto';
     statsGrid.innerHTML = `
       <div><div class="stat-value">${formatKm(plan.totalDistanceKm)}</div><div class="stat-label">${legsText}, según la ruta</div></div>
       <div><div class="stat-value">${formatLiters(plan.liters)}</div><div class="stat-label">${litersNote}</div></div>
@@ -141,6 +161,21 @@ function render(root: HTMLElement, plan: TripPlan): void {
 
   // ---- Estaciones ----
   renderStations(root, plan);
+
+  // ---- QR de navegación (Google Maps) ----
+  void renderNavQr(root, plan);
+}
+
+async function renderNavQr(root: HTMLElement, plan: TripPlan): Promise<void> {
+  const box = qso('[data-qr]', root);
+  const img = qso<HTMLImageElement>('[data-qr-img]', root);
+  if (!box || !img) return;
+  try {
+    img.src = await navQrDataUrl(plan);
+    box.removeAttribute('hidden');
+  } catch {
+    // Si falla la generación, dejamos el bloque oculto (no es crítico).
+  }
 }
 
 /** Handles del mapa montado, para enfocar estaciones desde las cards. */
@@ -233,10 +268,10 @@ function renderStations(root: HTMLElement, plan: TripPlan): void {
   if (plan.extraStations.length > 0) {
     const title =
       plan.refuelLegs.length > 0
-        ? 'Otras estaciones sobre la ruta'
+        ? 'Estaciones de backup <span class="stations-group-hint">· sobre la ruta, por si querés cargar antes</span>'
         : 'Sobre la ruta <span class="stations-group-hint">· salís con tanque lleno y llegás sin cargar</span>';
     groups.push(
-      `<div class="stations-group"><div class="stations-group-title">${title}</div><div class="stations-grid">${plan.extraStations
+      `<div class="stations-group stations-group-backup"><div class="stations-group-title">${title}</div><div class="stations-grid">${plan.extraStations
         .map((s) => stationCard(s, s.id === cheapestId))
         .join('')}</div></div>`,
     );

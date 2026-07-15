@@ -24,9 +24,9 @@
       <span class="nav-wordmark">KmxKm</span>
     </a>
     <div class="nav-links">
-      <a href="#">Cómo funciona</a>
-      <a href="#">Precios de nafta</a>
-      <a href="#" class="active">Mis viajes</a>
+      <a href="como-funciona.html">Cómo funciona</a>
+      <a href="precios.html">Precios de nafta</a>
+      <a href="mis-viajes.html">Mis viajes</a>
     </div>
   </nav>
 
@@ -64,18 +64,31 @@
         <span class="toggle-track"><span class="toggle-thumb"></span></span>
         Ida y vuelta
       </div>
-      <button class="form-advanced" data-advanced-toggle aria-expanded="false">Ajustes avanzados (consumo, precio manual) ▾</button>
+      <button class="form-advanced" data-advanced-toggle aria-expanded="false">Ajustes avanzados (pasajeros, carga, A/C) ▾</button>
     </div>
     <div class="advanced-panel" data-advanced-panel hidden>
-      <label class="advanced-field">
-        <span class="advanced-label">Consumo manual</span>
-        <span class="advanced-input-wrap"><input data-adv-consumo type="number" inputmode="decimal" min="1" max="30" step="0.1" placeholder="del auto"> L/100 km</span>
+      <div class="advanced-field">
+        <span class="advanced-label">¿Cuántos van?</span>
+        <div class="stepper" data-stepper="passengers">
+          <button type="button" class="stepper-btn" data-step="-1" aria-label="Menos">−</button>
+          <span class="stepper-val" data-adv-passengers>1</span>
+          <button type="button" class="stepper-btn" data-step="1" aria-label="Más">+</button>
+        </div>
+        <span class="advanced-mini">personas</span>
+      </div>
+      <label class="advanced-check">
+        <input type="checkbox" data-adv-load>
+        <span>Vamos con el baúl lleno / auto muy cargado</span>
       </label>
-      <label class="advanced-field">
-        <span class="advanced-label">Precio de la nafta</span>
-        <span class="advanced-input-wrap">$ <input data-adv-precio type="number" inputmode="decimal" min="1" step="1" placeholder="del recorrido"> /L</span>
+      <label class="advanced-check">
+        <input type="checkbox" data-adv-ac>
+        <span>Aire acondicionado casi todo el viaje</span>
       </label>
-      <div class="advanced-hint">Vacío = usamos el consumo de tu auto y los precios reales del recorrido.</div>
+      <details class="advanced-expert">
+        <summary>Sé el consumo exacto de mi auto</summary>
+        <span class="advanced-input-wrap"><input data-adv-consumo type="number" inputmode="decimal" min="1" max="30" step="0.1" placeholder="del catálogo"> L/100 km</span>
+      </details>
+      <div class="advanced-hint">Ajustamos el gasto de nafta según cuánto carga el auto. Los precios salen solos de datos oficiales.</div>
     </div>
   </div>
 
