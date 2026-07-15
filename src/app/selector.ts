@@ -246,14 +246,13 @@ export async function initSelector(): Promise<void> {
     const g = beginGen();
     const car = await services.cars.getCarById(id);
     if (!isCurrent(g) || !car) return;
-    state.car = car;
-    state.brandId = car.brandId;
-    state.model = car.model;
-    state.year = car.year;
-    state.category = null;
-    markSelected(modelList, `[data-car="${id}"]`);
-    renderDeduced();
-    updateUseBtn();
+    // Sincronizamos las tres columnas con la cascada normal (marca → modelo →
+    // año) para que no quede seleccionada una marca vieja de antes de buscar.
+    await selectBrand(car.brandId, car.brand, g);
+    if (!isCurrent(g)) return;
+    await selectModel(car.model, g);
+    if (!isCurrent(g)) return;
+    await selectYear(car.year, g);
   }
 
   function renderDeduced(): void {

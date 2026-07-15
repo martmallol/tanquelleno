@@ -21,9 +21,8 @@ import {
 } from '../domain/format';
 import { qs, qso, escapeHtml } from './dom';
 import { tripStore } from './tripStore';
-import { renderRouteMap } from './mapView';
+import { renderRouteMap, type RouteMapHandles } from './mapView';
 import { BRAND_COLORS } from '../data/mock/stations.data';
-import type { Map as LeafletMap } from 'leaflet';
 
 export async function initResultado(): Promise<void> {
   const root = qs('[data-resultado]');
@@ -100,10 +99,19 @@ function render(root: HTMLElement, plan: TripPlan): void {
   const legsText = plan.route.roundTrip ? 'ida y vuelta' : 'solo ida';
   const statsGrid = qso('[data-stats]', root);
   if (statsGrid) {
-    const priceNote = plan.avgPriceEstimated ? 'promedio estimado del recorrido' : 'promedio en tu recorrido';
+    const priceNote = plan.priceOverridden
+      ? 'precio fijado a mano'
+      : plan.avgPriceEstimated
+        ? 'promedio estimado del recorrido'
+        : 'promedio en tu recorrido';
+    const litersNote = plan.car.manualConsumption
+      ? 'con tu consumo manual'
+      : plan.car.estimatedConsumption
+        ? 'estimados por categoría'
+        : 'estimados para tu auto';
     statsGrid.innerHTML = `
       <div><div class="stat-value">${formatKm(plan.totalDistanceKm)}</div><div class="stat-label">${legsText}, según la ruta</div></div>
-      <div><div class="stat-value">${formatLiters(plan.liters)}</div><div class="stat-label">${plan.car.estimatedConsumption ? 'estimados por categoría' : 'estimados para tu auto'}</div></div>
+      <div><div class="stat-value">${formatLiters(plan.liters)}</div><div class="stat-label">${litersNote}</div></div>
       <div><div class="stat-value">${formatARSCompact(plan.avgPricePerLiter)}/L</div><div class="stat-label">${priceNote}</div></div>
       <div><div class="stat-value">${formatStops(plan.refuelStops)}</div><div class="stat-label">saliendo con tanque lleno</div></div>`;
   }
@@ -135,6 +143,10 @@ function render(root: HTMLElement, plan: TripPlan): void {
   renderStations(root, plan);
 }
 
+/** Handles del mapa montado, para enfocar estaciones desde las cards. */
+let mapHandles: RouteMapHandles | null = null;
+let activePanel: HTMLElement | null = null;
+
 /**
  * Monta el mapa Leaflet en el panel visible según el breakpoint. Leaflet no
  * se inicializa bien en contenedores con display:none, así que montamos solo
@@ -144,21 +156,30 @@ function renderMapPanels(root: HTMLElement, plan: TripPlan): void {
   const desktop = qso('[data-map]', root);
   const mobile = qso('[data-map-mobile]', root);
   const mq = window.matchMedia('(max-width: 900px)');
-  let current: LeafletMap | null = null;
 
   const mount = (): void => {
-    current?.remove();
-    current = null;
+    mapHandles?.map.remove();
+    mapHandles = null;
     const panel = mq.matches ? mobile : desktop;
     if (!panel) return;
     const note = panel.querySelector('.map-note')?.outerHTML ?? '';
     panel.innerHTML = '';
-    current = renderRouteMap(panel, plan);
+    mapHandles = renderRouteMap(panel, plan);
+    activePanel = panel;
     if (note) panel.insertAdjacentHTML('beforeend', note);
   };
 
   mount();
   mq.addEventListener('change', mount);
+}
+
+/** Enfoca una estación en el mapa: paneo + popup (desde el click en su card). */
+function focusStationOnMap(stationId: string): void {
+  const marker = mapHandles?.stationMarkers.get(stationId);
+  if (!marker || !mapHandles) return;
+  activePanel?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  mapHandles.map.panTo(marker.getLatLng());
+  marker.openPopup();
 }
 
 function stationCard(s: Station, cheapest: boolean): string {
@@ -170,10 +191,11 @@ function stationCard(s: Station, cheapest: boolean): string {
     ? `${formatARSCompact(s.price.pricePerLiter)}/L`
     : `≈ ${formatARSCompact(s.price.pricePerLiter)}/L`;
   const flag = cheapest ? `<div class="station-flag">★ MÁS BARATA DEL TRAYECTO</div>` : '';
+  const seq = s.seq != null ? `<span class="station-seq">${s.seq}</span>` : '';
   return `
-    <div class="station-card${cheapest ? ' cheapest' : ''}">
+    <div class="station-card${cheapest ? ' cheapest' : ''}" data-station-id="${s.id}" role="button" tabindex="0" title="Ver en el mapa">
       ${flag}
-      <div class="station-brand"><span class="brand-logo" style="background:${color.bg};color:${color.fg}">${color.abbr}</span><span class="station-name">${escapeHtml(s.brand)}</span></div>
+      <div class="station-brand">${seq}<span class="brand-logo" style="background:${color.bg};color:${color.fg}">${color.abbr}</span><span class="station-name">${escapeHtml(s.brand)}</span></div>
       <div class="station-body">
         <div class="station-place">${escapeHtml(s.place)} · km ${s.kmFromStart}</div>
         <div class="station-price">${priceText} ${badge}</div>
@@ -181,14 +203,55 @@ function stationCard(s: Station, cheapest: boolean): string {
     </div>`;
 }
 
+/** Título de sección de una carga: "1ª carga · cerca del km 616 del viaje". */
+function legTitle(n: number, targetTripKm: number): string {
+  return `${n}ª carga <span class="stations-group-hint">· cerca del km ${targetTripKm} del viaje</span>`;
+}
+
 function renderStations(root: HTMLElement, plan: TripPlan): void {
-  const grid = qso('[data-stations]', root);
-  if (!grid) return;
+  const container = qso('[data-stations]', root);
+  if (!container) return;
   if (plan.stations.length === 0) {
-    grid.innerHTML = `<div class="stations-empty">No encontramos estaciones sobre esta ruta en nuestros datos. Cargá con el tanque lleno antes de salir.</div>`;
+    container.innerHTML = `<div class="stations-empty">No encontramos estaciones sobre esta ruta en nuestros datos. Cargá con el tanque lleno antes de salir.</div>`;
     return;
   }
-  grid.innerHTML = plan.stations.map((s, i) => stationCard(s, i === 0)).join('');
+
+  // La más barata de todo el trayecto conserva su estrella, esté donde esté.
+  const cheapestId = plan.stations[0]!.id;
+  const groups: string[] = [];
+
+  for (const leg of plan.refuelLegs) {
+    const cards =
+      leg.stations.length > 0
+        ? `<div class="stations-grid">${leg.stations.map((s) => stationCard(s, s.id === cheapestId)).join('')}</div>`
+        : `<div class="stations-empty">Sin estaciones en la ventana de esta carga — conviene cargar en la anterior o apenas después.</div>`;
+    groups.push(
+      `<div class="stations-group"><div class="stations-group-title">${legTitle(leg.n, leg.targetTripKm)}</div>${cards}</div>`,
+    );
+  }
+
+  if (plan.extraStations.length > 0) {
+    const title =
+      plan.refuelLegs.length > 0
+        ? 'Otras estaciones sobre la ruta'
+        : 'Sobre la ruta <span class="stations-group-hint">· salís con tanque lleno y llegás sin cargar</span>';
+    groups.push(
+      `<div class="stations-group"><div class="stations-group-title">${title}</div><div class="stations-grid">${plan.extraStations
+        .map((s) => stationCard(s, s.id === cheapestId))
+        .join('')}</div></div>`,
+    );
+  }
+
+  container.innerHTML = groups.join('');
+
+  // Click en una card → enfocar su pin en el mapa.
+  container.addEventListener('click', (e) => {
+    const card = (e.target as HTMLElement).closest<HTMLElement>('[data-station-id]');
+    if (!card) return;
+    container.querySelectorAll('.station-card.active').forEach((c) => c.classList.remove('active'));
+    card.classList.add('active');
+    focusStationOnMap(card.dataset.stationId!);
+  });
 }
 
 // ---- helpers ----

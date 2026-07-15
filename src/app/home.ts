@@ -27,6 +27,7 @@ export async function initHome(): Promise<void> {
   let destinationId = trip.destinationId;
   let stopIds = [...trip.stopIds];
   let roundTrip = trip.roundTrip;
+  let advanced = { ...(trip.advanced ?? {}) };
 
   // ---- Pintar valores actuales ----
   const [origin, destination] = await Promise.all([
@@ -65,7 +66,7 @@ export async function initHome(): Promise<void> {
     }
   });
 
-  // ---- Agregar / quitar paradas ----
+  // ---- Agregar / quitar / reordenar paradas ----
   stopsWrap.addEventListener('click', (e) => {
     const target = e.target as HTMLElement;
     const removeBtn = target.closest<HTMLElement>('[data-remove-stop]');
@@ -76,11 +77,59 @@ export async function initHome(): Promise<void> {
       persist();
       return;
     }
+    const moveBtn = target.closest<HTMLElement>('[data-move-stop]');
+    if (moveBtn) {
+      const id = moveBtn.dataset.moveStop!;
+      const dir = Number(moveBtn.dataset.dir);
+      const i = stopIds.indexOf(id);
+      const j = i + dir;
+      if (i !== -1 && j >= 0 && j < stopIds.length) {
+        [stopIds[i], stopIds[j]] = [stopIds[j]!, stopIds[i]!];
+        void renderStops();
+        persist();
+      }
+      return;
+    }
     const addBtn = target.closest<HTMLElement>('[data-add-stop]');
     if (addBtn) {
       openStopPicker(addBtn);
     }
   });
+
+  // ---- Ajustes avanzados (consumo / precio manual) ----
+  const advToggle = qso('[data-advanced-toggle]');
+  const advPanel = qso('[data-advanced-panel]');
+  const advConsumo = qso<HTMLInputElement>('[data-adv-consumo]');
+  const advPrecio = qso<HTMLInputElement>('[data-adv-precio]');
+  if (advToggle && advPanel && advConsumo && advPrecio) {
+    // Valores persistidos
+    if (advanced.consumptionLper100 != null) advConsumo.value = String(advanced.consumptionLper100);
+    if (advanced.pricePerLiter != null) advPrecio.value = String(advanced.pricePerLiter);
+    const hasValues = advanced.consumptionLper100 != null || advanced.pricePerLiter != null;
+    if (hasValues) openAdvanced(true);
+
+    advToggle.addEventListener('click', () => openAdvanced(advPanel.hidden));
+
+    const parseNum = (v: string): number | null => {
+      const n = Number.parseFloat(v.replace(',', '.'));
+      return Number.isFinite(n) && n > 0 ? n : null;
+    };
+    advConsumo.addEventListener('input', () => {
+      advanced = { ...advanced, consumptionLper100: parseNum(advConsumo.value) };
+      persist();
+    });
+    advPrecio.addEventListener('input', () => {
+      advanced = { ...advanced, pricePerLiter: parseNum(advPrecio.value) };
+      persist();
+    });
+  }
+
+  function openAdvanced(open: boolean): void {
+    if (!advPanel || !advToggle) return;
+    advPanel.hidden = !open;
+    advToggle.setAttribute('aria-expanded', String(open));
+    advToggle.textContent = `Ajustes avanzados (consumo, precio manual) ${open ? '▴' : '▾'}`;
+  }
 
   // ---- Calcular ----
   calcButtons.forEach((btn) => {
@@ -93,7 +142,7 @@ export async function initHome(): Promise<void> {
   // ---------------------------------------------------------------
 
   function persist(): void {
-    tripStore.set({ originId, destinationId, stopIds, roundTrip, car: tripStore.get().car });
+    tripStore.set({ originId, destinationId, stopIds, roundTrip, advanced, car: tripStore.get().car });
   }
 
   function renderRoundTrip(): void {
@@ -106,10 +155,17 @@ export async function initHome(): Promise<void> {
       (p): p is Place => p !== null,
     );
     const chips = places
-      .map(
-        (p) =>
-          `<span class="chip-soft">parada: ${escapeHtml(p.name)} <span data-remove-stop="${p.id}" style="cursor:pointer" role="button" aria-label="Quitar parada">✕</span></span>`,
-      )
+      .map((p, i) => {
+        const left =
+          i > 0
+            ? `<span class="stop-move" data-move-stop="${p.id}" data-dir="-1" role="button" aria-label="Mover antes" title="Mover antes">‹</span>`
+            : '';
+        const right =
+          i < places.length - 1
+            ? `<span class="stop-move" data-move-stop="${p.id}" data-dir="1" role="button" aria-label="Mover después" title="Mover después">›</span>`
+            : '';
+        return `<span class="chip-soft">${left}parada ${i + 1}: ${escapeHtml(p.name)}${right} <span data-remove-stop="${p.id}" style="cursor:pointer" role="button" aria-label="Quitar parada">✕</span></span>`;
+      })
       .join('');
     stopsWrap.innerHTML = `${chips}<span class="link-accent" data-add-stop role="button" tabindex="0">+ agregar parada</span>`;
   }

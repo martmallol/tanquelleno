@@ -1,0 +1,579 @@
+{
+  "$schema": "Catalogo propio de autos que se venden/andan en Argentina",
+  "version": 1,
+  "updatedAt": "2026-07-14",
+  "sources": [
+    "Fichas tecnicas de fabricante (consumo mixto/ruta, tanque)",
+    "Guia oficial de precios ACARA (nomina de modelos/anios vigentes)",
+    "Pruebas de ruta de prensa especializada argentina"
+  ],
+  "notes": "Valores aproximados curados a mano. Para agregar un modelo: agregar una entrada en cars y correr npm test. El fallback por categoria (categoryProfiles) cubre autos que no esten aca.",
+  "categoryProfiles": [
+    {
+      "category": "chico",
+      "label": "Auto chico",
+      "consumptionLper100": 6.2,
+      "suggestedFuel": "super",
+      "tankLiters": 45
+    },
+    {
+      "category": "sedan",
+      "label": "Sedán",
+      "consumptionLper100": 6.8,
+      "suggestedFuel": "super",
+      "tankLiters": 50
+    },
+    {
+      "category": "suv",
+      "label": "SUV",
+      "consumptionLper100": 7.8,
+      "suggestedFuel": "super",
+      "tankLiters": 55
+    },
+    {
+      "category": "pickup",
+      "label": "Pickup",
+      "consumptionLper100": 9.0,
+      "suggestedFuel": "super",
+      "tankLiters": 78
+    }
+  ],
+  "cars": [
+    {
+      "brand": "Fiat",
+      "model": "Cronos",
+      "version": "1.3",
+      "years": [
+        2019,
+        2020,
+        2021,
+        2022,
+        2023,
+        2024
+      ],
+      "category": "sedan",
+      "consumptionLper100": 6.3,
+      "suggestedFuel": "super",
+      "tankLiters": 48
+    },
+    {
+      "brand": "Fiat",
+      "model": "Argo",
+      "version": "1.3",
+      "years": [
+        2019,
+        2020,
+        2021,
+        2022,
+        2023
+      ],
+      "category": "chico",
+      "consumptionLper100": 6.1,
+      "suggestedFuel": "super",
+      "tankLiters": 48
+    },
+    {
+      "brand": "Fiat",
+      "model": "Pulse",
+      "version": "1.3",
+      "years": [
+        2022,
+        2023,
+        2024
+      ],
+      "category": "suv",
+      "consumptionLper100": 7.0,
+      "suggestedFuel": "super",
+      "tankLiters": 47
+    },
+    {
+      "brand": "Fiat",
+      "model": "Toro",
+      "version": "2.0 TDI",
+      "years": [
+        2020,
+        2021,
+        2022,
+        2023,
+        2024
+      ],
+      "category": "pickup",
+      "consumptionLper100": 8.5,
+      "suggestedFuel": "super",
+      "tankLiters": 60
+    },
+    {
+      "brand": "Fiat",
+      "model": "Mobi",
+      "version": "1.0",
+      "years": [
+        2019,
+        2020,
+        2021
+      ],
+      "category": "chico",
+      "consumptionLper100": 5.6,
+      "suggestedFuel": "super",
+      "tankLiters": 47
+    },
+    {
+      "brand": "Volkswagen",
+      "model": "Gol Trend",
+      "version": "1.6",
+      "years": [
+        2019,
+        2020,
+        2021,
+        2022,
+        2023
+      ],
+      "category": "chico",
+      "consumptionLper100": 6.5,
+      "suggestedFuel": "super",
+      "tankLiters": 55
+    },
+    {
+      "brand": "Volkswagen",
+      "model": "Polo",
+      "version": "1.6 MSI",
+      "years": [
+        2019,
+        2020,
+        2021,
+        2022,
+        2023,
+        2024
+      ],
+      "category": "chico",
+      "consumptionLper100": 6.6,
+      "suggestedFuel": "super",
+      "tankLiters": 52
+    },
+    {
+      "brand": "Volkswagen",
+      "model": "Virtus",
+      "version": "1.6 MSI",
+      "years": [
+        2019,
+        2020,
+        2021,
+        2022,
+        2023,
+        2024
+      ],
+      "category": "sedan",
+      "consumptionLper100": 6.7,
+      "suggestedFuel": "super",
+      "tankLiters": 52
+    },
+    {
+      "brand": "Volkswagen",
+      "model": "T-Cross",
+      "version": "1.6 MSI",
+      "years": [
+        2020,
+        2021,
+        2022,
+        2023,
+        2024
+      ],
+      "category": "suv",
+      "consumptionLper100": 7.4,
+      "suggestedFuel": "super",
+      "tankLiters": 52
+    },
+    {
+      "brand": "Volkswagen",
+      "model": "Amarok",
+      "version": "2.0 TDI",
+      "years": [
+        2019,
+        2020,
+        2021,
+        2022,
+        2023
+      ],
+      "category": "pickup",
+      "consumptionLper100": 8.9,
+      "suggestedFuel": "super",
+      "tankLiters": 80
+    },
+    {
+      "brand": "Toyota",
+      "model": "Etios",
+      "version": "1.5",
+      "years": [
+        2019,
+        2020,
+        2021,
+        2022,
+        2023
+      ],
+      "category": "chico",
+      "consumptionLper100": 6.4,
+      "suggestedFuel": "super",
+      "tankLiters": 45
+    },
+    {
+      "brand": "Toyota",
+      "model": "Yaris",
+      "version": "1.5",
+      "years": [
+        2019,
+        2020,
+        2021,
+        2022,
+        2023,
+        2024
+      ],
+      "category": "chico",
+      "consumptionLper100": 6.0,
+      "suggestedFuel": "super",
+      "tankLiters": 42
+    },
+    {
+      "brand": "Toyota",
+      "model": "Corolla",
+      "version": "2.0",
+      "years": [
+        2020,
+        2021,
+        2022,
+        2023,
+        2024
+      ],
+      "category": "sedan",
+      "consumptionLper100": 6.8,
+      "suggestedFuel": "premium",
+      "tankLiters": 50
+    },
+    {
+      "brand": "Toyota",
+      "model": "Corolla Cross",
+      "version": "2.0",
+      "years": [
+        2021,
+        2022,
+        2023,
+        2024
+      ],
+      "category": "suv",
+      "consumptionLper100": 7.5,
+      "suggestedFuel": "premium",
+      "tankLiters": 47
+    },
+    {
+      "brand": "Toyota",
+      "model": "Hilux",
+      "version": "2.8 TDI",
+      "years": [
+        2019,
+        2020,
+        2021,
+        2022,
+        2023,
+        2024
+      ],
+      "category": "pickup",
+      "consumptionLper100": 9.0,
+      "suggestedFuel": "super",
+      "tankLiters": 80
+    },
+    {
+      "brand": "Toyota",
+      "model": "SW4",
+      "version": "2.8 TDI",
+      "years": [
+        2020,
+        2021,
+        2022,
+        2023,
+        2024
+      ],
+      "category": "suv",
+      "consumptionLper100": 9.5,
+      "suggestedFuel": "super",
+      "tankLiters": 80
+    },
+    {
+      "brand": "Chevrolet",
+      "model": "Onix",
+      "version": "1.2",
+      "years": [
+        2020,
+        2021,
+        2022,
+        2023,
+        2024
+      ],
+      "category": "chico",
+      "consumptionLper100": 6.2,
+      "suggestedFuel": "super",
+      "tankLiters": 44
+    },
+    {
+      "brand": "Chevrolet",
+      "model": "Onix Plus",
+      "version": "1.2",
+      "years": [
+        2020,
+        2021,
+        2022,
+        2023,
+        2024
+      ],
+      "category": "sedan",
+      "consumptionLper100": 6.4,
+      "suggestedFuel": "super",
+      "tankLiters": 44
+    },
+    {
+      "brand": "Chevrolet",
+      "model": "Tracker",
+      "version": "1.2 Turbo",
+      "years": [
+        2020,
+        2021,
+        2022,
+        2023,
+        2024
+      ],
+      "category": "suv",
+      "consumptionLper100": 7.3,
+      "suggestedFuel": "super",
+      "tankLiters": 44
+    },
+    {
+      "brand": "Chevrolet",
+      "model": "S10",
+      "version": "2.8 TD",
+      "years": [
+        2019,
+        2020,
+        2021,
+        2022,
+        2023
+      ],
+      "category": "pickup",
+      "consumptionLper100": 9.2,
+      "suggestedFuel": "super",
+      "tankLiters": 76
+    },
+    {
+      "brand": "Renault",
+      "model": "Kwid",
+      "version": "1.0",
+      "years": [
+        2019,
+        2020,
+        2021,
+        2022,
+        2023,
+        2024
+      ],
+      "category": "chico",
+      "consumptionLper100": 5.8,
+      "suggestedFuel": "super",
+      "tankLiters": 38
+    },
+    {
+      "brand": "Renault",
+      "model": "Sandero",
+      "version": "1.6",
+      "years": [
+        2019,
+        2020,
+        2021,
+        2022
+      ],
+      "category": "chico",
+      "consumptionLper100": 6.7,
+      "suggestedFuel": "super",
+      "tankLiters": 50
+    },
+    {
+      "brand": "Renault",
+      "model": "Logan",
+      "version": "1.6",
+      "years": [
+        2019,
+        2020,
+        2021,
+        2022
+      ],
+      "category": "sedan",
+      "consumptionLper100": 6.8,
+      "suggestedFuel": "super",
+      "tankLiters": 50
+    },
+    {
+      "brand": "Renault",
+      "model": "Duster",
+      "version": "1.6",
+      "years": [
+        2019,
+        2020,
+        2021,
+        2022,
+        2023,
+        2024
+      ],
+      "category": "suv",
+      "consumptionLper100": 7.8,
+      "suggestedFuel": "super",
+      "tankLiters": 50
+    },
+    {
+      "brand": "Renault",
+      "model": "Alaskan",
+      "version": "2.3 TDI",
+      "years": [
+        2020,
+        2021,
+        2022,
+        2023
+      ],
+      "category": "pickup",
+      "consumptionLper100": 8.8,
+      "suggestedFuel": "super",
+      "tankLiters": 80
+    },
+    {
+      "brand": "Peugeot",
+      "model": "208",
+      "version": "1.6",
+      "years": [
+        2020,
+        2021,
+        2022,
+        2023,
+        2024
+      ],
+      "category": "chico",
+      "consumptionLper100": 6.4,
+      "suggestedFuel": "super",
+      "tankLiters": 44
+    },
+    {
+      "brand": "Peugeot",
+      "model": "2008",
+      "version": "1.6",
+      "years": [
+        2020,
+        2021,
+        2022,
+        2023,
+        2024
+      ],
+      "category": "suv",
+      "consumptionLper100": 7.2,
+      "suggestedFuel": "super",
+      "tankLiters": 44
+    },
+    {
+      "brand": "Peugeot",
+      "model": "Partner",
+      "version": "1.6",
+      "years": [
+        2019,
+        2020,
+        2021,
+        2022
+      ],
+      "category": "sedan",
+      "consumptionLper100": 7.5,
+      "suggestedFuel": "super",
+      "tankLiters": 55
+    },
+    {
+      "brand": "Ford",
+      "model": "Ka",
+      "version": "1.5",
+      "years": [
+        2019,
+        2020,
+        2021
+      ],
+      "category": "chico",
+      "consumptionLper100": 6.3,
+      "suggestedFuel": "super",
+      "tankLiters": 42
+    },
+    {
+      "brand": "Ford",
+      "model": "Territory",
+      "version": "1.5 Turbo",
+      "years": [
+        2021,
+        2022,
+        2023,
+        2024
+      ],
+      "category": "suv",
+      "consumptionLper100": 8.0,
+      "suggestedFuel": "premium",
+      "tankLiters": 55
+    },
+    {
+      "brand": "Ford",
+      "model": "Ranger",
+      "version": "3.2 TDI",
+      "years": [
+        2019,
+        2020,
+        2021,
+        2022
+      ],
+      "category": "pickup",
+      "consumptionLper100": 9.4,
+      "suggestedFuel": "super",
+      "tankLiters": 80
+    },
+    {
+      "brand": "Ford",
+      "model": "Ranger",
+      "version": "2.0 Bi-Turbo",
+      "years": [
+        2023,
+        2024
+      ],
+      "category": "pickup",
+      "consumptionLper100": 8.6,
+      "suggestedFuel": "super",
+      "tankLiters": 80
+    },
+    {
+      "brand": "Citroën",
+      "model": "C3",
+      "version": "1.6",
+      "years": [
+        2019,
+        2020,
+        2021,
+        2022,
+        2023,
+        2024
+      ],
+      "category": "chico",
+      "consumptionLper100": 6.6,
+      "suggestedFuel": "super",
+      "tankLiters": 50
+    },
+    {
+      "brand": "Citroën",
+      "model": "C4 Cactus",
+      "version": "1.6",
+      "years": [
+        2019,
+        2020,
+        2021,
+        2022,
+        2023
+      ],
+      "category": "suv",
+      "consumptionLper100": 7.3,
+      "suggestedFuel": "super",
+      "tankLiters": 50
+    }
+  ]
+}

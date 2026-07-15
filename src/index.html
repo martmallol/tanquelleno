@@ -64,7 +64,18 @@
         <span class="toggle-track"><span class="toggle-thumb"></span></span>
         Ida y vuelta
       </div>
-      <div class="form-advanced">Ajustes avanzados (consumo, precio manual) ▾</div>
+      <button class="form-advanced" data-advanced-toggle aria-expanded="false">Ajustes avanzados (consumo, precio manual) ▾</button>
+    </div>
+    <div class="advanced-panel" data-advanced-panel hidden>
+      <label class="advanced-field">
+        <span class="advanced-label">Consumo manual</span>
+        <span class="advanced-input-wrap"><input data-adv-consumo type="number" inputmode="decimal" min="1" max="30" step="0.1" placeholder="del auto"> L/100 km</span>
+      </label>
+      <label class="advanced-field">
+        <span class="advanced-label">Precio de la nafta</span>
+        <span class="advanced-input-wrap">$ <input data-adv-precio type="number" inputmode="decimal" min="1" step="1" placeholder="del recorrido"> /L</span>
+      </label>
+      <div class="advanced-hint">Vacío = usamos el consumo de tu auto y los precios reales del recorrido.</div>
     </div>
   </div>
 

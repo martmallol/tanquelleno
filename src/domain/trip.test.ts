@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   computeTrip,
+  groupStationsByRefuel,
   litersFor,
   rangeFor,
   refuelStopsFor,
@@ -151,5 +152,91 @@ describe('computeTrip', () => {
     });
     expect(plan.avgPriceEstimated).toBe(false);
     expect(plan.costs[0]!.exact).toBe(true);
+  });
+});
+
+describe('priceOverride (Ajustes avanzados)', () => {
+  const base: ComputeTripInput = {
+    route: route(500, true),
+    car: cronos,
+    stations: [station('s1', 'super', 1600, true, 120)],
+    referencePrices: refPrices,
+    tolls: 5000,
+  };
+
+  it('el precio manual pisa el promedio de estaciones y queda marcado', () => {
+    const plan = computeTrip({ ...base, priceOverride: 2000 });
+    expect(plan.avgPricePerLiter).toBe(2000);
+    expect(plan.avgPriceEstimated).toBe(false);
+    expect(plan.priceOverridden).toBe(true);
+    expect(plan.costs[0]!.totalCost).toBeCloseTo(63 * 2000);
+  });
+
+  it('sin override no cambia nada', () => {
+    const plan = computeTrip({ ...base, priceOverride: null });
+    expect(plan.priceOverridden).toBe(false);
+    expect(plan.avgPricePerLiter).toBe(1600);
+  });
+});
+
+describe('groupStationsByRefuel (plan de cargas estilo GasBuddy)', () => {
+  // Viaje 500 km ida, ida y vuelta = 1000 km, autonomía 500 → útil 450:
+  // cargas en km 450 y 900 del viaje total.
+  const oneWay = 500;
+  const total = 1000;
+  const range = 500;
+
+  it('asigna estaciones a la carga cuya ventana atraviesan (ida o vuelta)', () => {
+    const stations = [
+      station('ida-430', 'super', 1700, true, 430),  // ida: km 430 ∈ [247, 450] → 1ª carga
+      station('ida-260', 'super', 1600, true, 260),  // ida: km 260 ∈ [247, 450] → 1ª carga
+      station('vuelta-120', 'super', 1650, true, 120), // vuelta: km 880 ∈ [697, 900] → 2ª carga
+      station('cerca-origen', 'super', 1500, true, 20), // km 20 y 980: fuera de ambas → extra
+    ];
+    const { legs, extras } = groupStationsByRefuel(stations, oneWay, total, range, true);
+    expect(legs).toHaveLength(2);
+    expect(legs[0]!.stations.map((s) => s.id).sort()).toEqual(['ida-260', 'ida-430']);
+    // Dentro de la carga, más barata primero
+    expect(legs[0]!.stations[0]!.id).toBe('ida-260');
+    expect(legs[1]!.stations.map((s) => s.id)).toEqual(['vuelta-120']);
+    expect(extras.map((s) => s.id)).toEqual(['cerca-origen']);
+  });
+
+  it('solo ida no espeja posiciones de vuelta', () => {
+    const stations = [station('ida-120', 'super', 1650, true, 120)];
+    const { legs, extras } = groupStationsByRefuel(stations, oneWay, oneWay, range, false);
+    // 500 km con 450 útiles → 1 carga en km 450; km 120 queda fuera de [202, 450]... no:
+    // ventana = [450 - 202.5, 450] = [247.5, 450] → 120 es extra
+    expect(legs).toHaveLength(1);
+    expect(legs[0]!.stations).toHaveLength(0);
+    expect(extras.map((s) => s.id)).toEqual(['ida-120']);
+  });
+
+  it('viaje corto sin cargas: todo queda como extra ordenado por km', () => {
+    const stations = [station('b', 'super', 1600, true, 300), station('a', 'super', 1700, true, 100)];
+    const { legs, extras } = groupStationsByRefuel(stations, 400, 400, 900, false);
+    expect(legs).toHaveLength(0);
+    expect(extras.map((s) => s.id)).toEqual(['a', 'b']);
+  });
+
+  it('computeTrip numera los pins: cargas primero, extras después', () => {
+    const plan = computeTrip({
+      route: route(oneWay, true),
+      car: cronos, // tanque 48 / 6.3 → autonomía 762, útil 685 → 1 carga en km 685
+      stations: [
+        station('vuelta-350', 'super', 1700, true, 350), // vuelta: km 650 ∈ [377, 685] → 1ª carga
+        station('vuelta-400', 'super', 1600, true, 400), // vuelta: km 600 ∈ ventana → 1ª carga
+        station('extra', 'super', 1500, true, 10),
+      ],
+      referencePrices: refPrices,
+      tolls: 0,
+    });
+    expect(plan.refuelLegs).toHaveLength(1);
+    const leg = plan.refuelLegs[0]!;
+    // más barata primero dentro de la carga → seq 1
+    expect(leg.stations[0]!.id).toBe('vuelta-400');
+    expect(leg.stations[0]!.seq).toBe(1);
+    expect(leg.stations[1]!.seq).toBe(2);
+    expect(plan.extraStations[0]!.seq).toBe(3);
   });
 });

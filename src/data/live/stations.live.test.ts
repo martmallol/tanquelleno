@@ -56,16 +56,32 @@ describe('stationFromRecord', () => {
 });
 
 describe('filterStaleRecords', () => {
+  const now = new Date('2026-07-14');
+
   it('descarta precios viejos (el dataset guarda el último reporte, aunque sea de 2017)', () => {
-    const now = new Date('2026-07-14');
     const records = [
-      record(1, 0, 0, 2150, '2026-06-20T10:00:00'), // fresco
-      record(2, 0, 0, 2200, '2026-03-01T10:00:00'), // dentro de la ventana
+      record(1, 0, 0, 2150, '2026-06-20T10:00:00'), // < 60 días
       record(3, 0, 0, 999, '2024-08-15T10:00:00'), // viejo: parece ganga, fuera
       record(4, 0, 0, 780, '2017-03-02T10:00:00'), // prehistórico, fuera
     ];
-    const fresh = filterStaleRecords(records, now);
-    expect(fresh.map((r) => r.precio)).toEqual([2150, 2200]);
+    expect(filterStaleRecords(records, now).map((r) => r.precio)).toEqual([2150]);
+  });
+
+  it('ventana base de 60 días cuando hay estaciones de sobra', () => {
+    // 30 frescas (≤60d) + 10 de ~80 días: con cobertura suficiente, las de 80d quedan fuera
+    const fresh = Array.from({ length: 30 }, (_, i) => record(i, 0, 0, 2000, '2026-06-15T00:00:00'));
+    const older = Array.from({ length: 10 }, (_, i) => record(100 + i, 0, 0, 1900, '2026-04-28T00:00:00'));
+    const out = filterStaleRecords([...fresh, ...older], now);
+    expect(out).toHaveLength(30);
+  });
+
+  it('extiende a 90 días cuando la provincia queda rala (pocas estaciones frescas)', () => {
+    // Solo 5 frescas → se extiende la ventana y entran las de ~80 días
+    const fresh = Array.from({ length: 5 }, (_, i) => record(i, 0, 0, 2000, '2026-06-15T00:00:00'));
+    const older = Array.from({ length: 10 }, (_, i) => record(100 + i, 0, 0, 1900, '2026-04-28T00:00:00'));
+    const ancient = [record(999, 0, 0, 900, '2025-01-01T00:00:00')]; // fuera igual
+    const out = filterStaleRecords([...fresh, ...older, ...ancient], now);
+    expect(out).toHaveLength(15);
   });
 });
 

@@ -62,7 +62,7 @@ const CACHE_TTL_MS = 6 * 60 * 60 * 1000;
 const memCache = new Map<string, EnergiaRecord[]>();
 
 function cacheKey(provinceId: string, fuel: FuelType): string {
-  return `kmxkm.energia.v3.${provinceId}.${fuel}`;
+  return `kmxkm.energia.v4.${provinceId}.${fuel}`;
 }
 
 function readStorage(key: string): EnergiaRecord[] | null {
@@ -149,20 +149,30 @@ export async function fetchProvincePrices(
 
 /**
  * El dataset guarda el ÚLTIMO precio reportado por estación: hay estaciones
- * cuya última carga es de 2017. Con inflación, un precio viejo parece una
- * ganga y envenena el promedio y el ranking de "más barata". Nos quedamos
- * solo con reportes recientes.
+ * cuya última carga es de 2017. Con la inflación argentina un precio viejo
+ * parece una ganga y envenena el promedio y el ranking de "más barata".
+ *
+ * Ventana adaptativa (medida sobre el dataset real, jul-2026):
+ *   - 30 días retiene ~10% de las estaciones (La Pampa quedaría con 3) → mucho dataloss.
+ *   - 60 días (base) retiene ~20%: buen balance frescura/cobertura.
+ *   - Si una provincia queda con menos de MIN_STATIONS, se extiende a 90 días
+ *     (importa en provincias ralas, donde cualquier estación cuenta).
  */
-const MAX_PRICE_AGE_DAYS = 150;
+const PRICE_AGE_DAYS_BASE = 60;
+const PRICE_AGE_DAYS_EXTENDED = 90;
+const MIN_STATIONS_FOR_BASE_WINDOW = 25;
+
+function cutoffFor(days: number, now: Date): string {
+  return new Date(now.getTime() - days * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+}
 
 export function filterStaleRecords(
   records: EnergiaRecord[],
   now: Date = new Date(),
 ): EnergiaRecord[] {
-  const cutoff = new Date(now.getTime() - MAX_PRICE_AGE_DAYS * 24 * 60 * 60 * 1000)
-    .toISOString()
-    .slice(0, 10);
-  return records.filter((r) => r.fecha >= cutoff);
+  const fresh = records.filter((r) => r.fecha >= cutoffFor(PRICE_AGE_DAYS_BASE, now));
+  if (fresh.length >= MIN_STATIONS_FOR_BASE_WINDOW) return fresh;
+  return records.filter((r) => r.fecha >= cutoffFor(PRICE_AGE_DAYS_EXTENDED, now));
 }
 
 /**

@@ -111,6 +111,24 @@ export interface Station {
   coord: LatLng;
   /** Precio de la nafta sugerida en esta estación (exacto o estimado). */
   price: FuelPrice;
+  /**
+   * Nº de pin en el mapa y en las cards (1..n, en orden de plan de cargas).
+   * Lo asigna computeTrip al armar los grupos de carga.
+   */
+  seq?: number;
+}
+
+/**
+ * Grupo de estaciones candidatas para una carga concreta del viaje
+ * (estilo GasBuddy: "para la 1ª carga, estas; para la 2ª, estas").
+ */
+export interface RefuelLeg {
+  /** Nº de carga (1 = primera). */
+  n: number;
+  /** Km del viaje total (incluida la vuelta) donde conviene cargar. */
+  targetTripKm: number;
+  /** Candidatas para esta carga, más barata primero. */
+  stations: Station[];
 }
 
 // ------------------------------------------------------------------
@@ -146,8 +164,14 @@ export interface TripPlan {
   costs: FuelCostBreakdown[];
   /** Estaciones recomendadas para cargar, ordenadas por conveniencia. */
   stations: Station[];
+  /** Plan de cargas: qué estaciones sirven para la 1ª carga, la 2ª, etc. */
+  refuelLegs: RefuelLeg[];
+  /** Estaciones sobre la ruta que no caen en la ventana de ninguna carga. */
+  extraStations: Station[];
   /** Peajes estimados del recorrido, en ARS. */
   tolls: number;
+  /** true si el precio por litro fue fijado a mano en "Ajustes avanzados". */
+  priceOverridden: boolean;
 }
 
 /**
@@ -163,4 +187,6 @@ export interface TripCar {
   tankLiters: number;
   /** true si el consumo salió de un promedio por categoría, no del modelo. */
   estimatedConsumption: boolean;
+  /** true si el consumo fue fijado a mano en "Ajustes avanzados". */
+  manualConsumption?: boolean;
 }

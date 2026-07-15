@@ -17,6 +17,7 @@ export const DEFAULT_TRIP: TripInput = {
   stopIds: ['necochea'],
   roundTrip: true,
   car: { kind: 'catalog', carId: 'fiat-cronos-1-3-2022' },
+  advanced: {},
 };
 
 function read(): TripInput {
@@ -30,6 +31,7 @@ function read(): TripInput {
       stopIds: Array.isArray(parsed.stopIds) ? parsed.stopIds : [...DEFAULT_TRIP.stopIds],
       roundTrip: parsed.roundTrip ?? DEFAULT_TRIP.roundTrip,
       car: parsed.car ?? { ...DEFAULT_TRIP.car },
+      advanced: parsed.advanced ?? {},
     };
   } catch {
     return { ...DEFAULT_TRIP };

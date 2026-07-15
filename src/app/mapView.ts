@@ -3,8 +3,8 @@
  *
  * Dibuja la geometría real de la ruta (coral punteado, estilo crepúsculo),
  * los waypoints (origen azulado, paradas/destino coral) con su nombre, y las
- * estaciones recomendadas con el color de su bandera y un popup con el precio
- * y su estado (exacto / estimado).
+ * estaciones con un pin NUMERADO que coincide con el número de su card en el
+ * plan de cargas. El popup muestra precio y estado (exacto / estimado).
  */
 
 import L from 'leaflet';
@@ -22,6 +22,12 @@ const ROUTE_STYLE: L.PolylineOptions = {
   lineJoin: 'round',
 };
 
+export interface RouteMapHandles {
+  map: L.Map;
+  /** Marcador por id de estación, para enfocar desde las cards. */
+  stationMarkers: Map<string, L.Marker>;
+}
+
 function stationColor(brandId: string): string {
   return BRAND_COLORS[brandId]?.bg ?? '#4A5578';
 }
@@ -31,16 +37,29 @@ function stationPopup(s: Station): string {
     ? `<span class="map-popup-badge exact">${priceStateLabel(s.price.source)}</span>`
     : `<span class="map-popup-badge">${priceStateLabel(s.price.source)}</span>`;
   const approx = s.price.exact ? '' : '≈ ';
+  const num = s.seq != null ? `<span class="map-popup-num">${s.seq}</span> ` : '';
   return `
     <div class="map-popup">
-      <div class="map-popup-brand">${escapeHtml(s.brand)}</div>
+      <div class="map-popup-brand">${num}${escapeHtml(s.brand)}</div>
       <div class="map-popup-place">${escapeHtml(s.place)} · km ${s.kmFromStart}</div>
       <div class="map-popup-price">${approx}${formatARSCompact(s.price.pricePerLiter)}/L ${estado}</div>
     </div>`;
 }
 
-/** Monta el mapa del plan en `container` y devuelve la instancia. */
-export function renderRouteMap(container: HTMLElement, plan: TripPlan): L.Map {
+/** Pin numerado con el color de la bandera de la estación. */
+function stationIcon(s: Station): L.DivIcon {
+  const color = stationColor(s.brandId);
+  return L.divIcon({
+    className: 'station-pin-wrap',
+    html: `<span class="station-pin" style="background:${color}">${s.seq ?? '⛽'}</span>`,
+    iconSize: [26, 26],
+    iconAnchor: [13, 13],
+    popupAnchor: [0, -12],
+  });
+}
+
+/** Monta el mapa del plan en `container` y devuelve mapa + marcadores. */
+export function renderRouteMap(container: HTMLElement, plan: TripPlan): RouteMapHandles {
   const map = L.map(container, {
     zoomControl: true,
     scrollWheelZoom: false, // no robar el scroll de la página
@@ -76,19 +95,25 @@ export function renderRouteMap(container: HTMLElement, plan: TripPlan): L.Map {
       });
   });
 
-  // Estaciones recomendadas, coloreadas por bandera, con popup de precio.
-  for (const s of plan.stations) {
-    L.circleMarker([s.coord.lat, s.coord.lng], {
-      radius: 7,
-      color: '#FFFDFA',
-      weight: 2,
-      fillColor: stationColor(s.brandId),
-      fillOpacity: 1,
-    })
+  // Estaciones con pin numerado según el plan de cargas.
+  const stationMarkers = new Map<string, L.Marker>();
+  const allStations = [...plan.refuelLegs.flatMap((l) => l.stations), ...plan.extraStations];
+  for (const s of allStations) {
+    const marker = L.marker([s.coord.lat, s.coord.lng], { icon: stationIcon(s) })
       .addTo(map)
       .bindPopup(stationPopup(s), { closeButton: false });
+    stationMarkers.set(s.id, marker);
   }
 
   map.fitBounds(line.getBounds(), { padding: [34, 34] });
-  return map;
+
+  // Al imprimir, el panel cambia de tamaño: Leaflet necesita recalcular.
+  const onPrint = (): void => {
+    map.invalidateSize();
+    map.fitBounds(line.getBounds(), { padding: [24, 24] });
+  };
+  window.addEventListener('beforeprint', onPrint);
+  map.on('unload', () => window.removeEventListener('beforeprint', onPrint));
+
+  return { map, stationMarkers };
 }

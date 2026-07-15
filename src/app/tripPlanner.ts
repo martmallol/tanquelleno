@@ -20,12 +20,21 @@ export type CarSelection =
   | { kind: 'catalog'; carId: string }
   | { kind: 'category'; category: CategoryProfile['category'] };
 
+/** Overrides opcionales de "Ajustes avanzados" en el inicio. */
+export interface TripAdvanced {
+  /** Consumo manual en L/100 km (pisa el del catálogo). */
+  consumptionLper100?: number | null;
+  /** Precio manual de la nafta en ARS/L (pisa el promedio del recorrido). */
+  pricePerLiter?: number | null;
+}
+
 export interface TripInput {
   originId: string;
   destinationId: string;
   stopIds: string[];
   roundTrip: boolean;
   car: CarSelection;
+  advanced?: TripAdvanced;
 }
 
 export class TripPlanningError extends Error {}
@@ -75,7 +84,19 @@ export async function planTrip(services: Services, input: TripInput): Promise<Tr
     input.stopIds.map((id) => resolvePlace(services, id, 'una parada')),
   );
 
-  const car = await resolveCar(services, input.car);
+  let car = await resolveCar(services, input.car);
+
+  // Consumo manual de "Ajustes avanzados": pisa el del catálogo/categoría.
+  const manualConsumption = input.advanced?.consumptionLper100;
+  if (manualConsumption != null && manualConsumption > 0) {
+    car = {
+      ...car,
+      consumptionLper100: manualConsumption,
+      estimatedConsumption: false,
+      manualConsumption: true,
+    };
+  }
+
   const route = await services.directions.route(origin, stops, destination, input.roundTrip);
 
   const [stations, refPrices, tolls] = await Promise.all([
@@ -84,5 +105,12 @@ export async function planTrip(services: Services, input: TripInput): Promise<Tr
     services.tolls.estimateTolls(route),
   ]);
 
-  return computeTrip({ route, car, stations, referencePrices: refPrices, tolls });
+  return computeTrip({
+    route,
+    car,
+    stations,
+    referencePrices: refPrices,
+    tolls,
+    priceOverride: input.advanced?.pricePerLiter ?? null,
+  });
 }

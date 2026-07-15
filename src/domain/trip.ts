@@ -11,6 +11,7 @@ import type {
   FuelCostBreakdown,
   FuelPrice,
   FuelType,
+  RefuelLeg,
   Route,
   Station,
   TripCar,
@@ -30,6 +31,8 @@ export interface ComputeTripInput {
   referencePrices: Record<FuelType, FuelPrice>;
   /** Peajes estimados del recorrido (ARS). */
   tolls: number;
+  /** Precio por litro fijado a mano ("Ajustes avanzados"): pisa el promedio. */
+  priceOverride?: number | null;
 }
 
 /** Litros necesarios para una distancia dada, según consumo L/100km. */
@@ -60,17 +63,68 @@ function averagePrice(prices: number[]): number | null {
   return prices.reduce((a, b) => a + b, 0) / prices.length;
 }
 
-export function computeTrip(input: ComputeTripInput): TripPlan {
-  const { route, car, stations, referencePrices, tolls } = input;
+/**
+ * Margen de seguridad sobre la autonomía: se planifica cargar antes de vaciar
+ * el tanque (nadie llega a la estación con el último litro).
+ */
+const RANGE_SAFETY = 0.9;
 
-  const legs = route.roundTrip ? 2 : 1;
-  const totalDistanceKm = route.distanceKm * legs;
+/**
+ * Plan de cargas estilo GasBuddy: para cada carga necesaria, qué estaciones
+ * del corredor caen en la ventana donde conviene parar.
+ *
+ * La ventana de la carga i es el tramo [t_i − 45% autonomía, t_i], con
+ * t_i = i × autonomía útil, medido sobre el viaje completo. En ida y vuelta
+ * una estación se pasa dos veces: al km de ida y al km espejado de vuelta
+ * (2 × ida − km); cualquiera de las dos posiciones puede caer en la ventana.
+ */
+export function groupStationsByRefuel(
+  stations: Station[],
+  oneWayKm: number,
+  totalKm: number,
+  rangeKm: number,
+  roundTrip: boolean,
+): { legs: RefuelLeg[]; extras: Station[] } {
+  const usable = rangeKm * RANGE_SAFETY;
+  const stops = refuelStopsFor(totalKm, usable);
+  if (stops === 0 || usable <= 0) {
+    return { legs: [], extras: [...stations].sort((a, b) => a.kmFromStart - b.kmFromStart) };
+  }
+
+  const assigned = new Set<string>();
+  const legs: RefuelLeg[] = [];
+  for (let i = 1; i <= stops; i++) {
+    const target = Math.min(i * usable, totalKm - 1);
+    const windowStart = target - usable * 0.45;
+    const candidates = stations.filter((s) => {
+      if (assigned.has(s.id)) return false;
+      const positions = [s.kmFromStart];
+      if (roundTrip) positions.push(2 * oneWayKm - s.kmFromStart);
+      return positions.some((p) => p >= windowStart && p <= target);
+    });
+    candidates.sort((a, b) => a.price.pricePerLiter - b.price.pricePerLiter);
+    candidates.forEach((s) => assigned.add(s.id));
+    legs.push({ n: i, targetTripKm: Math.round(target), stations: candidates });
+  }
+
+  const extras = stations
+    .filter((s) => !assigned.has(s.id))
+    .sort((a, b) => a.kmFromStart - b.kmFromStart);
+  return { legs, extras };
+}
+
+export function computeTrip(input: ComputeTripInput): TripPlan {
+  const { route, car, stations, referencePrices, tolls, priceOverride } = input;
+
+  const legsFactor = route.roundTrip ? 2 : 1;
+  const totalDistanceKm = route.distanceKm * legsFactor;
   const liters = litersFor(totalDistanceKm, car.consumptionLper100);
   const rangeKm = rangeFor(car.tankLiters, car.consumptionLper100);
-  const refuelStops = refuelStopsFor(totalDistanceKm, rangeKm);
+  const refuelStops = refuelStopsFor(totalDistanceKm, rangeKm * RANGE_SAFETY);
 
   // Precio promedio de la nafta sugerida a lo largo del recorrido: si hay
   // estaciones, promediamos sus precios; si no, usamos el de referencia.
+  // Un precio manual de "Ajustes avanzados" pisa todo.
   const suggested = car.suggestedFuel;
   const stationPricesForSuggested = stations
     .filter((s) => s.price.fuel === suggested)
@@ -79,9 +133,15 @@ export function computeTrip(input: ComputeTripInput): TripPlan {
 
   const refSuggested = referencePrices[suggested];
   const avgFromStations = averagePrice(stationPricesForSuggested);
-  const avgPricePerLiter = avgFromStations ?? refSuggested.pricePerLiter;
-  const avgPriceEstimated =
-    avgFromStations != null ? anyEstimatedStation : !refSuggested.exact;
+  const priceOverridden = priceOverride != null && priceOverride > 0;
+  const avgPricePerLiter = priceOverridden
+    ? priceOverride
+    : (avgFromStations ?? refSuggested.pricePerLiter);
+  const avgPriceEstimated = priceOverridden
+    ? false
+    : avgFromStations != null
+      ? anyEstimatedStation
+      : !refSuggested.exact;
 
   // Costos por tipo de nafta: sugerida (con el promedio del recorrido) y la
   // alternativa premium (con su precio de referencia).
@@ -101,6 +161,19 @@ export function computeTrip(input: ComputeTripInput): TripPlan {
     totalCost: liters * refAlt.pricePerLiter,
   });
 
+  // Plan de cargas (estilo GasBuddy) + numeración de pins: primero las
+  // estaciones de cada carga en orden, después las extra.
+  const { legs: refuelLegs, extras: extraStations } = groupStationsByRefuel(
+    stations,
+    route.distanceKm,
+    totalDistanceKm,
+    rangeKm,
+    route.roundTrip,
+  );
+  let seq = 1;
+  for (const leg of refuelLegs) for (const s of leg.stations) s.seq = seq++;
+  for (const s of extraStations) s.seq = seq++;
+
   // Estaciones ordenadas por precio de la nafta sugerida (más barata primero).
   const rankedStations = [...stations].sort(
     (a, b) => a.price.pricePerLiter - b.price.pricePerLiter,
@@ -117,7 +190,10 @@ export function computeTrip(input: ComputeTripInput): TripPlan {
     refuelStops,
     costs,
     stations: rankedStations,
+    refuelLegs,
+    extraStations,
     tolls: Math.round(tolls),
+    priceOverridden,
   };
 }
 

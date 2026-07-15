@@ -1220,3 +1220,211 @@ button {
 }
 
 .place-picker-item:hover { background: var(--bg-highlight); }
+
+/* ---- Ajustes avanzados (inicio) ---- */
+
+.form-advanced {
+  font: 600 12.5px var(--font-body);
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.form-advanced:hover { color: var(--text-secondary); }
+
+.advanced-panel {
+  display: flex;
+  gap: 20px;
+  align-items: baseline;
+  flex-wrap: wrap;
+  margin-top: 12px;
+  padding: 14px 16px;
+  background: var(--bg-soft);
+  border-radius: 14px;
+}
+
+.advanced-field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.advanced-label {
+  font: 700 10.5px var(--font-body);
+  color: var(--text-muted);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.advanced-input-wrap {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font: 500 12.5px var(--font-body);
+  color: var(--text-secondary);
+}
+
+.advanced-input-wrap input {
+  width: 90px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-strong);
+  border-radius: 9px;
+  padding: 7px 10px;
+  font: 600 13.5px var(--font-body);
+  color: var(--text-main);
+  outline: none;
+}
+
+.advanced-input-wrap input:focus { border-color: var(--accent); }
+
+.advanced-hint {
+  flex-basis: 100%;
+  font: 500 11.5px var(--font-body);
+  color: var(--text-muted);
+}
+
+@media (max-width: 760px) {
+  .advanced-panel {
+    background: var(--bg-card);
+    box-shadow: 0 6px 18px rgba(10, 14, 40, 0.25);
+  }
+}
+
+/* ---- Reordenar paradas ---- */
+
+.stop-move {
+  cursor: pointer;
+  font-weight: 700;
+  padding: 0 3px;
+  color: var(--text-muted);
+}
+
+.stop-move:hover { color: var(--accent-deep); }
+
+/* ---- Grupos de estaciones por carga (estilo GasBuddy) ---- */
+
+.stations-group { margin-top: 18px; }
+
+.stations-group-title {
+  font: 700 15px var(--font-display);
+  color: var(--text-main);
+}
+
+.stations-group-hint {
+  font: 500 12px var(--font-body);
+  color: var(--text-muted);
+}
+
+.station-seq {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--navy-800);
+  color: #fff;
+  display: grid;
+  place-items: center;
+  font: 700 11px var(--font-body);
+  flex: none;
+}
+
+.station-card { cursor: pointer; transition: border-color 0.15s, box-shadow 0.15s; }
+.station-card:hover { border-color: var(--accent-soft); }
+
+.station-card.active {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px rgba(248, 127, 109, 0.35);
+}
+
+/* Pin numerado de estación en el mapa */
+.station-pin-wrap { background: none; border: none; }
+
+.station-pin {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 2px solid #fffdfa;
+  color: #fff;
+  font: 700 11.5px var(--font-body);
+  box-shadow: 0 2px 6px rgba(20, 27, 59, 0.35);
+}
+
+.map-popup-num {
+  display: inline-grid;
+  place-items: center;
+  width: 17px;
+  height: 17px;
+  border-radius: 50%;
+  background: var(--navy-800);
+  color: #fff;
+  font: 700 10px var(--font-body);
+  vertical-align: -3px;
+}
+
+@media (max-width: 900px) {
+  .stations-group { margin-top: 0; }
+
+  .stations-group-title {
+    padding: 12px 20px 6px;
+    font-size: 13.5px;
+    background: var(--bg-soft);
+    border-bottom: 1px solid var(--border-soft);
+  }
+
+  .station-seq { width: 20px; height: 20px; font-size: 10px; }
+}
+
+/* ============================================================
+   IMPRESIÓN — resumen imprimible con mapa grande
+   ============================================================ */
+
+@media print {
+  * {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .resultado-body {
+    background: #fff;
+    padding-bottom: 0;
+  }
+
+  /* Fuera: acciones, barra mobile, controles de zoom */
+  .resultado-actions,
+  .m-actions,
+  .m-resultado-header,
+  .leaflet-control-zoom,
+  .map-panel-mobile { display: none !important; }
+
+  .resultado-header { padding: 10px 0 14px; }
+
+  /* Resumen y mapa apilados a lo ancho de la hoja */
+  .resultado-grid {
+    display: block;
+    padding: 0;
+  }
+
+  .resultado-col { margin-bottom: 14px; }
+
+  .card-summary { box-shadow: none; border: 1px solid #ccc; page-break-inside: avoid; }
+
+  /* Mapa grande, con borde, sin cortar entre páginas */
+  .map-panel {
+    min-height: 620px !important;
+    height: 620px !important;
+    margin-top: 14px;
+    border: 1px solid #bbb;
+    border-radius: 8px;
+    page-break-inside: avoid;
+  }
+
+  .stations-section { padding: 18px 0 0; }
+
+  .stations-grid { grid-template-columns: repeat(3, 1fr); gap: 10px; }
+
+  .station-card { border: 1px solid #ccc; page-break-inside: avoid; cursor: default; }
+
+  .stations-group { page-break-inside: avoid; }
+
+  .map-note { display: none; }
+}
