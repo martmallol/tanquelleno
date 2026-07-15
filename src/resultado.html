@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="es-AR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>KmxKm — Tu viaje</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700;12..96,800&family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<div class="resultado-body" data-resultado data-state="loading">
+
+  <div class="error-banner" data-error hidden></div>
+
+  <!-- Header desktop: franja navy -->
+  <div class="resultado-header">
+    <div class="resultado-route">
+      <span class="resultado-route-logo">km</span>
+      <div class="resultado-route-title">
+        <span data-route-title>Tu viaje</span>
+        <span data-route-chips></span>
+      </div>
+    </div>
+    <div class="resultado-actions">
+      <a class="btn-pill-ghost" href="index.html">✎ Editar viaje</a>
+      <button class="btn-pill-ghost" onclick="window.print()">⎙ Imprimir</button>
+      <button class="btn-whatsapp">Compartir por WhatsApp ↗</button>
+    </div>
+  </div>
+
+  <!-- Header mobile: bloque navy con total -->
+  <div class="m-resultado-header">
+    <a class="m-back" href="index.html">‹ Editar viaje</a>
+    <div class="m-label">NAFTA PARA TODO EL VIAJE</div>
+    <div class="m-total" data-total data-m-total>Calculando…</div>
+    <div class="m-sub" data-m-sub></div>
+    <div class="m-stats" data-m-stats></div>
+  </div>
+
+  <div class="resultado-grid">
+    <div class="resultado-col">
+      <div class="card-summary">
+        <div class="card-summary-label">NAFTA PARA TODO EL VIAJE</div>
+        <div class="card-summary-total" data-total>Calculando…</div>
+        <div class="card-summary-sub" data-total-sub></div>
+
+        <div class="fuel-rows" data-fuel-rows></div>
+
+        <div class="stats-grid" data-stats></div>
+
+        <div class="peajes-row">
+          <div class="peajes-label">🛣 Peajes del recorrido</div>
+          <div class="peajes-value" data-tolls>—</div>
+        </div>
+      </div>
+
+      <div class="card-total">
+        <div class="card-total-label">Total nafta + peajes</div>
+        <div class="card-total-value" data-grand-total>—</div>
+      </div>
+    </div>
+
+    <div class="map-panel" data-map>
+      <div class="map-note">Ruta real por OpenStreetMap · tocá un pin para ver el precio de esa estación</div>
+    </div>
+  </div>
+
+  <!-- Mapa mobile (se renderiza aparte, tamaño reducido) -->
+  <div class="map-panel map-panel-mobile" data-map-mobile>
+    <div class="map-note">Ruta real · pins = estaciones</div>
+  </div>
+
+  <div class="stations-section">
+    <div class="stations-heading">
+      <div class="stations-title">Dónde te conviene cargar</div>
+      <div class="stations-sub">según la autonomía de tu auto y los precios del recorrido</div>
+    </div>
+    <div class="stations-grid" data-stations></div>
+  </div>
+
+  <!-- Barra de acciones mobile -->
+  <div class="m-actions">
+    <button class="btn-save">Guardar</button>
+    <button class="btn-whatsapp">Compartir por WhatsApp</button>
+  </div>
+
+</div>
+
+<script type="module" src="./entries/resultado.ts"></script>
+</body>
+</html>

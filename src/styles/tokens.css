@@ -1,0 +1,71 @@
+/* ============================================================
+   Tokens · colorway "Crepúsculo"
+   Fuente: Claude Design — Nafta Viajes · Exploraciones, turno 4d
+   El hero usa el gradiente completo; el resto de pantallas usa
+   base clara + acento coral.
+   ============================================================ */
+
+:root {
+  /* Cielo hero (gradiente completo) */
+  --grad-hero: linear-gradient(
+    180deg,
+    #16294a 0%,
+    #2c4368 30%,
+    #8d7e88 52%,
+    #f2a98b 68%,
+    #f87f6d 78%,
+    #3b4468 84%,
+    #141b3b 100%
+  );
+
+  /* Header interno / franja */
+  --grad-header: linear-gradient(180deg, #16294a, #22355a);
+  --navy-900: #141b3b;
+  --navy-800: #16294a;
+  --navy-700: #22355a;
+
+  /* Superficies */
+  --bg-base: #f0eff4;      /* fondo base de pantallas */
+  --bg-card: #fffdfa;      /* tarjeta */
+  --bg-soft: #edeff6;      /* chips / superficies suaves */
+  --bg-highlight: #fff1ed; /* destacado "más barata" */
+
+  /* Texto */
+  --text-main: #1b2240;
+  --text-secondary: #4a5578;
+  --text-muted: #8b90a6;
+  --text-on-dark: #fbefe4;
+  --text-on-dark-soft: #c7cee3;
+  --text-on-dark-muted: #b9c2db;
+
+  /* Acento */
+  --accent: #f87f6d;
+  --accent-hover: #e4674f;
+  --accent-deep: #e4674f;     /* número total sobre fondo claro */
+  --on-accent: #22102a;       /* texto sobre acento */
+  --accent-soft: #f8a682;     /* link activo sobre navy / línea ruta */
+
+  /* Bordes */
+  --border-soft: rgba(20, 27, 59, 0.08);
+  --border-mid: rgba(20, 27, 59, 0.1);
+  --border-strong: rgba(20, 27, 59, 0.15);
+
+  /* Lomas del hero */
+  --loma-1: #4a5578;
+  --loma-2: #333d63;
+
+  /* Sin cambio entre colorways */
+  --whatsapp: #2e7d53;
+  --badge-green-bg: #e3efe4;
+  --badge-green-text: #2e7d53;
+
+  /* Mapa */
+  --map-route: #f87f6d;
+  --map-pin-origin: #4a5578;
+  --map-bg-a: #e8e7f0;
+  --map-bg-b: #e2e1ec;
+
+  /* Tipografía */
+  --font-display: 'Bricolage Grotesque', sans-serif;
+  --font-body: 'Figtree', system-ui, sans-serif;
+}

@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="es-AR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>KmxKm — ¿Qué auto tienen?</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700;12..96,800&family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<div class="selector-page">
+  <div class="selector-heading">
+    <div class="selector-title">¿Qué auto tienen?</div>
+    <div class="selector-sub">buscá o tocá en orden — no hace falta saber nada técnico</div>
+  </div>
+
+  <input class="selector-search" type="search" placeholder="🔍 Buscá tu auto… ej. &quot;Cronos&quot;, &quot;Hilux&quot;, &quot;208&quot;">
+
+  <div class="selector-grid">
+    <div>
+      <div class="step-label">1 · MARCA</div>
+      <div class="brand-grid" data-brands></div>
+      <div class="see-all">ver todas las marcas ▾</div>
+    </div>
+
+    <div>
+      <div class="step-label">2 · MODELO</div>
+      <div class="model-list" data-models></div>
+    </div>
+
+    <div>
+      <div class="step-label">3 · AÑO</div>
+      <div class="year-chips" data-years></div>
+
+      <div class="deduced-card" data-deduced>
+        <div class="deduced-title">✓ ESTO LO DEDUCIMOS NOSOTROS</div>
+        <div class="deduced-rows">
+          <div style="color:var(--text-muted)">Elegí marca, modelo y año y te mostramos consumo, nafta y autonomía.</div>
+        </div>
+      </div>
+
+      <a class="btn-use-car" href="index.html" data-use-car aria-disabled="true">Usar este auto</a>
+    </div>
+  </div>
+
+  <div class="fallback-bar">
+    <div class="fallback-text">¿No encontrás tu auto? Elegí por tipo y usamos un consumo promedio:</div>
+    <div class="fallback-chips" data-category>
+      <span class="category-chip" data-category-chip data-category-value="chico">Auto chico</span>
+      <span class="category-chip" data-category-chip data-category-value="sedan">Sedán</span>
+      <span class="category-chip" data-category-chip data-category-value="suv">SUV</span>
+      <span class="category-chip" data-category-chip data-category-value="pickup">Pickup</span>
+    </div>
+  </div>
+</div>
+
+<script type="module" src="./entries/selector.ts"></script>
+</body>
+</html>
