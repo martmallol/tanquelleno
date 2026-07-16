@@ -57,10 +57,11 @@ src/
 | Promedios de nafta | `FuelPriceService` | mismo dataset, promedio provincial calculado en vivo |
 | Mapa | UI (`mapView.ts`) | Leaflet + tiles de OpenStreetMap |
 | Catálogo de autos AR | `CarCatalog` | base propia curada (no existe API pública de consumos) |
-| Peajes | `TollService` | estimación local (sin fuente abierta consolidada) |
+| Peajes | `TollService` | TollGuru (precios en vivo, con TelePASE) si está configurado; si no, base propia curada de cabinas reales con tarifas publicadas |
 
-En dev, el dataset de energía pasa por el proxy de Vite (`/api/energia`) para evitar
-mixed-content; en producción esa misma ruta la serviría un backend propio.
+En dev, tanto el dataset de energía (`/api/energia`) como TollGuru (`/api/tollguru`)
+pasan por el proxy de Vite para evitar mixed-content y **mantener la API key de TollGuru
+del lado del servidor**; en producción esas rutas las serviría un backend propio.
 
 ### Limpieza de datos del dataset oficial
 
@@ -93,9 +94,28 @@ sin respuesta aunque aparezca un modelo que todavía no cargamos.
 
 ### Peajes
 
-Estimación local (`tolls.mock.ts`): ~$1.200 por cabina cada ~120 km. Es un placeholder
-—no hay una fuente abierta consolidada de peajes—; el usuario puede ignorarlo o el
-diseño lo muestra aparte del costo de nafta.
+Detrás del puerto `TollService` (`src/data/tolls/`), con degradación elegante:
+
+- **TollGuru** (`tollguru.service.ts`) — precios **en vivo con TelePASE**. Le mandamos la
+  geometría real de la ruta (la misma del mapa, codificada como polilínea) y devuelve las
+  cabinas sobre esa traza con su tarifa. El parser (`parseTollguru`) está separado y
+  testeado sin red; es tolerante con los nombres de campo.
+- **Base curada** (`tolls.data.ts` + `tolls.service.ts`) — cabinas reales con coordenadas y
+  tarifas publicadas (corredor a la Costa confirmado por Res. 544/2026; RN9/etc. de
+  referencia). Es el **fallback** si TollGuru falla, y la fuente por defecto.
+
+El total y el desglose por cabina muestran la fuente y la vigencia en la UI. En ida y
+vuelta cada cabina se cuenta dos veces.
+
+**Activar TollGuru:**
+
+1. Poné la API key en la env del servidor `TOLLGURU_API_KEY` (la inyecta el proxy
+   `/api/tollguru`; nunca va al bundle del cliente).
+2. Corré con `VITE_TOLLS_SOURCE=tollguru` (o en `.env.local`). Sin el flag, o ante
+   cualquier error, se usa la base curada.
+
+No hay una API oficial de peajes de AR; TollGuru es un tercero que mantiene los cuadros
+tarifarios al día (evita tener que refrescar el dataset a mano).
 
 ### Ajustes avanzados
 
@@ -115,17 +135,21 @@ repiten, usa el camino directo y duplica (más eficiente).
 
 ### Plan de cargas (estilo GasBuddy)
 
-`groupStationsByRefuel` (en `domain/trip.ts`) agrupa las estaciones por **carga**. Solo las
-candidatas de cada carga se numeran, jerárquico: `1.1`, `1.2` (opciones de la 1ª carga),
-`2.1`… — y ese número coincide entre la card y el pin del mapa. Las que no caen en ninguna
-ventana de carga quedan como **estaciones de backup**: sin número, pin chico, listadas
-aparte.
+`groupStationsByRefuel` (en `domain/trip.ts`) agrupa las estaciones por **carga**. En cada
+carga, la **elegida** lleva el número entero (`1`, `2`) y sus alternativas se sub-numeran
+(`1.1`, `1.2`); ese número coincide entre la card y el pin del mapa. El usuario puede
+**elegir otra estación** en cada tramo (`domain/stationChoice.ts`) y el total de nafta se
+recalcula al instante (se muestra además el **mejor y peor caso** según dónde cargue). Las
+que no caen en ninguna ventana de carga quedan como **estaciones de backup**: sin número,
+pin chico, listadas aparte.
 
 ### Navegación (QR a Google Maps)
 
 En el resultado y la impresión hay un QR (generado localmente con `qrcode`, sin API
-externa) que abre el recorrido completo en Google Maps Directions —origen, paradas y
-destino—, desde donde el celular puede pasar a Waze. Ver `navLink.ts`.
+externa) que abre el **recorrido completo** en Google Maps Directions —origen, paradas y
+destino—. En mobile el QR se oculta y aparece un link "Abrir en Google Maps". **Waze quedó
+afuera a propósito**: su esquema de URL solo admite un destino (no paradas), así que no
+puede respetar el recorrido completo. Ver `navLink.ts`.
 
 ## Roadmap de negocio (no implementado)
 

@@ -8,7 +8,8 @@
  *     (datos.energia.gob.ar, Res. 314/2016 — la fuente detrás de naftas.com.ar)
  *   - Autos:      base propia curada de modelos que andan en Argentina
  *                 (no existe API pública de consumos; ver cars.data.ts)
- *   - Peajes:     estimación local (no hay fuente abierta consolidada)
+ *   - Peajes:     TollGuru (precios en vivo con TelePASE) si está configurado,
+ *                 con fallback a la base curada; ver data/tolls/index.ts
  *
  * Degradación: si OSRM no responde, caemos a la ruta aproximada del mock
  * (Haversine × factor) para que el cálculo no muera; estaciones/precios ya
@@ -18,7 +19,7 @@
 import type { Services } from '../ports';
 import { mockCarCatalog } from '../mock/cars.mock';
 import { mockDirections } from '../mock/directions.mock';
-import { mockTolls } from '../mock/tolls.mock';
+import { tollService } from '../tolls';
 import { liveDirections } from './directions.live';
 import { liveFuelPrices } from './fuelPrices.live';
 import { liveStations } from './stations.live';
@@ -42,5 +43,5 @@ export const liveServices: Services = {
 
   stations: liveStations,
   fuelPrices: liveFuelPrices,
-  tolls: mockTolls,
+  tolls: tollService,
 };

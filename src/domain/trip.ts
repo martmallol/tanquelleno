@@ -14,6 +14,7 @@ import type {
   RefuelLeg,
   Route,
   Station,
+  TollBooth,
   TripCar,
   TripPlan,
 } from './types';
@@ -29,8 +30,14 @@ export interface ComputeTripInput {
    * de las estaciones del recorrido (con fallback provincial/nacional).
    */
   referencePrices: Record<FuelType, FuelPrice>;
-  /** Peajes estimados del recorrido (ARS). */
+  /** Peajes del recorrido (ARS, ya con ida y vuelta si corresponde). */
   tolls: number;
+  /** Cabinas de peaje sobre la ruta (una pasada), para el desglose y el mapa. */
+  tollBooths?: TollBooth[];
+  /** Mes de vigencia de las tarifas de peaje. */
+  tollsUpdatedAt?: string;
+  /** De dónde salieron los peajes (fuente). */
+  tollsSource?: string;
 }
 
 /** Litros necesarios para una distancia dada, según consumo L/100km. */
@@ -113,6 +120,9 @@ export function groupStationsByRefuel(
 
 export function computeTrip(input: ComputeTripInput): TripPlan {
   const { route, car, stations, referencePrices, tolls } = input;
+  const tollBooths = input.tollBooths ?? [];
+  const tollsUpdatedAt = input.tollsUpdatedAt ?? '';
+  const tollsSource = input.tollsSource ?? '';
 
   const legsFactor = route.roundTrip ? 2 : 1;
   const totalDistanceKm = route.distanceKm * legsFactor;
@@ -151,8 +161,10 @@ export function computeTrip(input: ComputeTripInput): TripPlan {
     totalCost: liters * refAlt.pricePerLiter,
   });
 
-  // Plan de cargas (estilo GasBuddy) + numeración jerárquica de pins: cada
-  // carga es un número; sus opciones se sub-numeran "1.1", "1.2"… Las de
+  // Plan de cargas (estilo GasBuddy) + numeración de pins: la estación elegida
+  // por defecto de cada carga (la más barata, índice 0) lleva el número ENTERO
+  // de la carga ("1", "2"); sus alternativas se sub-numeran ("1.1", "1.2"). La
+  // UI puede reasignar estos seq si el usuario elige otra estación. Las de
   // backup (extraStations) NO se numeran: son alternativas sueltas.
   const { legs: refuelLegs, extras: extraStations } = groupStationsByRefuel(
     stations,
@@ -163,7 +175,7 @@ export function computeTrip(input: ComputeTripInput): TripPlan {
   );
   for (const leg of refuelLegs) {
     leg.stations.forEach((s, i) => {
-      s.seq = `${leg.n}.${i + 1}`;
+      s.seq = i === 0 ? `${leg.n}` : `${leg.n}.${i}`;
     });
   }
   // Las de backup quedan sin seq: las limpiamos por si vinieran con uno viejo.
@@ -188,6 +200,9 @@ export function computeTrip(input: ComputeTripInput): TripPlan {
     refuelLegs,
     extraStations,
     tolls: Math.round(tolls),
+    tollBooths,
+    tollsUpdatedAt,
+    tollsSource,
   };
 }
 

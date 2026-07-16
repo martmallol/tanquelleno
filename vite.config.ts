@@ -1,14 +1,21 @@
 import { resolve } from 'node:path';
 import { defineConfig } from 'vite';
 
-// Proxy al dataset oficial de precios en surtidor (datos.energia.gob.ar).
-// Evita mixed-content (la API es http) y deja la base misma-origen, igual que
-// la expondría un backend propio en producción.
-const energiaProxy = {
+// Proxies misma-origen, igual que los expondría un backend propio en producción:
+//  - /api/energia  → dataset oficial de precios en surtidor (evita mixed-content).
+//  - /api/tollguru → API de peajes TollGuru, con la API key inyectada server-side
+//    desde la env TOLLGURU_API_KEY (NO se expone en el bundle del cliente).
+const apiProxy = {
   '/api/energia': {
     target: 'http://datos.energia.gob.ar',
     changeOrigin: true,
     rewrite: (path: string) => path.replace(/^\/api\/energia/, ''),
+  },
+  '/api/tollguru': {
+    target: 'https://apis.tollguru.com',
+    changeOrigin: true,
+    rewrite: (path: string) => path.replace(/^\/api\/tollguru/, ''),
+    headers: { 'x-api-key': process.env.TOLLGURU_API_KEY ?? '' },
   },
 };
 
@@ -16,8 +23,8 @@ const energiaProxy = {
 export default defineConfig({
   root: 'src',
   publicDir: resolve(__dirname, 'public'),
-  server: { proxy: energiaProxy },
-  preview: { proxy: energiaProxy },
+  server: { proxy: apiProxy },
+  preview: { proxy: apiProxy },
   build: {
     outDir: resolve(__dirname, 'dist'),
     emptyOutDir: true,

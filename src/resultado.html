@@ -23,21 +23,39 @@
         <span data-route-chips></span>
       </div>
     </div>
+    <nav class="nav-links resultado-nav">
+      <a href="como-funciona.html">Cómo funciona</a>
+      <a href="precios.html">Precios de nafta</a>
+      <a href="mis-viajes.html">Mis viajes</a>
+    </nav>
     <div class="resultado-actions">
       <a class="btn-pill-ghost" href="index.html">✎ Editar viaje</a>
       <button class="btn-pill-ghost" data-save-trip>♥ Guardar</button>
-      <button class="btn-pill-ghost" onclick="window.print()">⎙ Imprimir</button>
+      <button class="btn-pill-ghost" data-save-pdf>⤓ Guardar PDF</button>
+      <button class="btn-pill-ghost" data-print>⎙ Imprimir</button>
       <button class="btn-whatsapp">Compartir por WhatsApp ↗</button>
     </div>
   </div>
 
   <!-- Header mobile: bloque navy con total -->
   <div class="m-resultado-header">
-    <a class="m-back" href="index.html">‹ Editar viaje</a>
+    <div class="m-topbar">
+      <a class="m-back" href="index.html">‹ Editar viaje</a>
+      <nav class="nav-links m-resultado-nav">
+        <a href="como-funciona.html">Cómo funciona</a>
+        <a href="precios.html">Precios</a>
+        <a href="mis-viajes.html">Mis viajes</a>
+      </nav>
+    </div>
     <div class="m-label">NAFTA PARA TODO EL VIAJE</div>
     <div class="m-total" data-total data-m-total>Calculando…</div>
+    <div class="m-range" data-range hidden></div>
     <div class="m-sub" data-m-sub></div>
     <div class="m-stats" data-m-stats></div>
+    <div class="m-open">
+      <a class="m-open-btn maps" data-open-maps target="_blank" rel="noopener">◗ Abrir el viaje en Google Maps</a>
+    </div>
+    <div class="m-open-note">Waze no permite cargar el recorrido con paradas por link, solo un destino.</div>
   </div>
 
   <div class="resultado-grid">
@@ -45,15 +63,19 @@
       <div class="card-summary">
         <div class="card-summary-label">NAFTA PARA TODO EL VIAJE</div>
         <div class="card-summary-total" data-total>Calculando…</div>
+        <div class="card-summary-range" data-range hidden></div>
         <div class="card-summary-sub" data-total-sub></div>
 
         <div class="fuel-rows" data-fuel-rows></div>
 
         <div class="stats-grid" data-stats></div>
 
-        <div class="peajes-row">
-          <div class="peajes-label">🛣 Peajes del recorrido</div>
-          <div class="peajes-value" data-tolls>—</div>
+        <div class="peajes-block">
+          <div class="peajes-row">
+            <div class="peajes-label">🛣 Peajes del recorrido</div>
+            <div class="peajes-value" data-tolls>—</div>
+          </div>
+          <div class="peajes-breakdown" data-tolls-breakdown hidden></div>
         </div>
       </div>
 
@@ -63,28 +85,34 @@
       </div>
 
       <div class="nav-qr" data-qr hidden>
-        <img class="nav-qr-img" data-qr-img alt="QR para abrir el recorrido en Google Maps">
+        <div class="nav-qr-codes">
+          <figure class="nav-qr-code">
+            <img class="nav-qr-img" data-qr-maps-img alt="QR para abrir el recorrido en Google Maps">
+            <figcaption>Google Maps<span>ruta completa</span></figcaption>
+          </figure>
+        </div>
         <div class="nav-qr-text">
-          <div class="nav-qr-title">Abrí el recorrido en el celular</div>
-          <div class="nav-qr-sub">Escaneá el QR y se abre en Google Maps con origen, paradas y destino cargados. Desde ahí podés pasar a Waze.</div>
+          <div class="nav-qr-title">Abrí el viaje en el celular</div>
+          <div class="nav-qr-sub">Escaneá con la cámara y Google Maps abre origen, paradas y destino, listo para navegar.</div>
+          <div class="nav-qr-note">No usamos Waze: su link solo permite un destino, no el recorrido con paradas.</div>
         </div>
       </div>
     </div>
 
     <div class="map-panel" data-map>
-      <div class="map-note">Ruta real por OpenStreetMap · tocá un pin para ver el precio de esa estación</div>
+      <div class="map-note">Ruta real por OpenStreetMap · tocá un pin de estación o de peaje 🛣 para ver el detalle</div>
     </div>
   </div>
 
   <!-- Mapa mobile (se renderiza aparte, tamaño reducido) -->
   <div class="map-panel map-panel-mobile" data-map-mobile>
-    <div class="map-note">Ruta real · pins = estaciones</div>
+    <div class="map-note">Ruta real · ⛽ estaciones · 🛣 peajes</div>
   </div>
 
   <div class="stations-section">
     <div class="stations-heading">
       <div class="stations-title">Dónde te conviene cargar</div>
-      <div class="stations-sub">según la autonomía de tu auto y los precios del recorrido</div>
+      <div class="stations-sub">tocá una estación para elegir dónde cargás en cada tramo — el total se ajusta solo</div>
     </div>
     <div class="stations-groups" data-stations></div>
   </div>
@@ -92,7 +120,8 @@
   <!-- Barra de acciones mobile -->
   <div class="m-actions">
     <button class="btn-save">Guardar</button>
-    <button class="btn-whatsapp">Compartir por WhatsApp</button>
+    <button class="btn-save ghost" data-save-pdf>Guardar PDF</button>
+    <button class="btn-whatsapp">WhatsApp</button>
   </div>
 
 </div>

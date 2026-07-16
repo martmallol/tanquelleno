@@ -134,6 +134,42 @@ export interface RefuelLeg {
 }
 
 // ------------------------------------------------------------------
+// Peajes sobre la ruta
+// ------------------------------------------------------------------
+
+/**
+ * Cabina de peaje real sobre el recorrido. Los valores salen de un dataset
+ * curado con tarifas publicadas (auto categoría 1, pago manual) — ver
+ * src/data/tolls. No es una API en vivo: `updatedAt` marca la vigencia.
+ */
+export interface TollBooth {
+  id: string;
+  /** Nombre de la cabina, p. ej. "Samborombón". */
+  name: string;
+  /** Ruta donde está, p. ej. "RP2", "RN9". */
+  road: string;
+  /** Concesionaria / operador, p. ej. "AUBASA", "Corredores Viales". */
+  operator: string;
+  coord: LatLng;
+  /** Km del viaje (una pasada) donde cae la cabina. */
+  kmFromStart: number;
+  /** Tarifa auto categoría 1, pago manual, en ARS (una pasada). */
+  price: number;
+}
+
+/** Resultado del cálculo de peajes de un recorrido. */
+export interface TollEstimate {
+  /** Suma total de peajes del viaje (ya considera ida y vuelta). */
+  total: number;
+  /** Cabinas sobre la ruta (una pasada), ordenadas por km. */
+  booths: TollBooth[];
+  /** Mes de vigencia de las tarifas, p. ej. "2026-07". */
+  updatedAt: string;
+  /** De dónde salieron los valores, p. ej. "TollGuru · TelePASE" o "Base curada". */
+  source: string;
+}
+
+// ------------------------------------------------------------------
 // Resultado del cálculo del viaje
 // ------------------------------------------------------------------
 
@@ -170,8 +206,14 @@ export interface TripPlan {
   refuelLegs: RefuelLeg[];
   /** Estaciones sobre la ruta que no caen en la ventana de ninguna carga. */
   extraStations: Station[];
-  /** Peajes estimados del recorrido, en ARS. */
+  /** Peajes del recorrido, en ARS (ya considera ida y vuelta). */
   tolls: number;
+  /** Cabinas de peaje sobre la ruta (una pasada), con su tarifa. */
+  tollBooths: TollBooth[];
+  /** Mes de vigencia de las tarifas de peaje, p. ej. "2026-07". */
+  tollsUpdatedAt: string;
+  /** De dónde salieron los peajes, p. ej. "TollGuru · TelePASE" o "Base curada". */
+  tollsSource: string;
 }
 
 /**

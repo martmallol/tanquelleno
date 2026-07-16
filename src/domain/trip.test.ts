@@ -196,7 +196,7 @@ describe('groupStationsByRefuel (plan de cargas estilo GasBuddy)', () => {
     expect(extras.map((s) => s.id)).toEqual(['a', 'b']);
   });
 
-  it('numera jerárquico solo las de carga (1.1, 1.2); las de backup sin número', () => {
+  it('numera la elegida con el entero de la carga y las alternativas 1.1, 1.2; backup sin número', () => {
     const plan = computeTrip({
       route: route(oneWay, true),
       car: cronos, // tanque 48 / 6.3 → autonomía 762, útil 685 → 1 carga en km 685
@@ -210,10 +210,11 @@ describe('groupStationsByRefuel (plan de cargas estilo GasBuddy)', () => {
     });
     expect(plan.refuelLegs).toHaveLength(1);
     const leg = plan.refuelLegs[0]!;
-    // más barata primero dentro de la carga → 1.1
+    // más barata primero dentro de la carga → es la elegida por defecto → "1"
     expect(leg.stations[0]!.id).toBe('vuelta-400');
-    expect(leg.stations[0]!.seq).toBe('1.1');
-    expect(leg.stations[1]!.seq).toBe('1.2');
+    expect(leg.stations[0]!.seq).toBe('1');
+    // la alternativa se sub-numera
+    expect(leg.stations[1]!.seq).toBe('1.1');
     // la de backup NO se numera
     expect(plan.extraStations[0]!.seq).toBeUndefined();
   });

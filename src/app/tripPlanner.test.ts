@@ -76,7 +76,12 @@ describe('planTrip (integración con mocks)', () => {
     expect(plan.costs).toHaveLength(2);
     expect(plan.costs[0]!.fuel).toBe('super'); // sugerida del Cronos
     expect(plan.costs[0]!.totalCost).toBeGreaterThan(0);
-    expect(plan.tolls).toBeGreaterThan(0);
+    // Los peajes se matchean contra cabinas reales por cercanía a la geometría.
+    // El mock aproxima la ruta con líneas rectas entre waypoints, que no
+    // necesariamente pasan por las plazas reales (en live, con OSRM sobre rutas
+    // reales, sí). El matching en sí se cubre en data/tolls/tolls.service.test.
+    expect(plan.tolls).toBeGreaterThanOrEqual(0);
+    expect(Array.isArray(plan.tollBooths)).toBe(true);
   });
 
   it('encuentra estaciones sobre el corredor a la costa', async () => {

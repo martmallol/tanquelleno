@@ -2,14 +2,15 @@
  * Mapa real del recorrido: Leaflet + tiles de OpenStreetMap (sin API key).
  *
  * Dibuja la geometría real de la ruta (coral punteado, estilo crepúsculo),
- * los waypoints (origen azulado, paradas/destino coral) con su nombre, y las
- * estaciones con un pin NUMERADO que coincide con el número de su card en el
- * plan de cargas. El popup muestra precio y estado (exacto / estimado).
+ * los waypoints (origen azulado, paradas/destino coral) con su nombre, las
+ * estaciones (la elegida de cada carga con pin NUMERADO entero; las
+ * alternativas y las de backup con pin chico sin número) y las cabinas de
+ * peaje. Los popups muestran precio y estado.
  */
 
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import type { Station, TripPlan } from '../domain/types';
+import type { Station, TollBooth, TripPlan } from '../domain/types';
 import { formatARSCompact, priceStateLabel } from '../domain/format';
 import { escapeHtml } from './dom';
 import { BRAND_COLORS } from '../data/mock/stations.data';
@@ -24,7 +25,7 @@ const ROUTE_STYLE: L.PolylineOptions = {
 
 export interface RouteMapHandles {
   map: L.Map;
-  /** Marcador por id de estación, para enfocar desde las cards. */
+  /** Marcador por id de estación, para enfocar/actualizar desde las cards. */
   stationMarkers: Map<string, L.Marker>;
 }
 
@@ -32,12 +33,21 @@ function stationColor(brandId: string): string {
   return BRAND_COLORS[brandId]?.bg ?? '#4A5578';
 }
 
+/** Una estación es "la elegida" de su carga si su seq es un entero (sin punto). */
+function isChosen(seq: string | undefined): boolean {
+  return seq != null && !seq.includes('.');
+}
+
 function stationPopup(s: Station): string {
   const estado = s.price.exact
     ? `<span class="map-popup-badge exact">${priceStateLabel(s.price.source)}</span>`
     : `<span class="map-popup-badge">${priceStateLabel(s.price.source)}</span>`;
   const approx = s.price.exact ? '' : '≈ ';
-  const num = s.seq != null ? `<span class="map-popup-num">${escapeHtml(s.seq)}</span> ` : '';
+  const num = isChosen(s.seq)
+    ? `<span class="map-popup-num">${escapeHtml(s.seq!)}</span> `
+    : s.seq != null
+      ? `<span class="map-popup-alt">opción ${escapeHtml(s.seq)}</span> `
+      : '';
   return `
     <div class="map-popup">
       <div class="map-popup-brand">${num}${escapeHtml(s.brand)}</div>
@@ -47,12 +57,12 @@ function stationPopup(s: Station): string {
 }
 
 /**
- * Pin con el color de la bandera. Las estaciones de una carga llevan su
- * etiqueta ("1.1"); las de backup un pin más chico y tenue, sin número.
+ * Pin de estación. La elegida de la carga (seq entero) lleva pin grande con su
+ * número; las alternativas de la carga y las de backup, pin chico sin número.
  */
-function stationIcon(s: Station): L.DivIcon {
+export function stationIcon(s: Station): L.DivIcon {
   const color = stationColor(s.brandId);
-  if (s.seq == null) {
+  if (!isChosen(s.seq)) {
     return L.divIcon({
       className: 'station-pin-wrap',
       html: `<span class="station-pin station-pin-backup" style="background:${color}"></span>`,
@@ -68,6 +78,33 @@ function stationIcon(s: Station): L.DivIcon {
     iconAnchor: [14, 14],
     popupAnchor: [0, -13],
   });
+}
+
+function tollIcon(): L.DivIcon {
+  return L.divIcon({
+    className: 'toll-pin-wrap',
+    html: `<span class="toll-pin">$</span>`,
+    iconSize: [22, 22],
+    iconAnchor: [11, 11],
+    popupAnchor: [0, -11],
+  });
+}
+
+function tollPopup(b: TollBooth): string {
+  return `
+    <div class="map-popup">
+      <div class="map-popup-brand">🛣 Peaje ${escapeHtml(b.name)}</div>
+      <div class="map-popup-place">${escapeHtml(b.road)} · ${escapeHtml(b.operator)} · km ${b.kmFromStart}</div>
+      <div class="map-popup-price">${formatARSCompact(b.price)} <span class="map-popup-badge">auto · estimado</span></div>
+    </div>`;
+}
+
+/** Reemplaza el icono y popup de una estación tras cambiar la elegida. */
+export function refreshStationMarker(handles: RouteMapHandles, s: Station): void {
+  const marker = handles.stationMarkers.get(s.id);
+  if (!marker) return;
+  marker.setIcon(stationIcon(s));
+  marker.setPopupContent(stationPopup(s));
 }
 
 /** Monta el mapa del plan en `container` y devuelve mapa + marcadores. */
@@ -107,7 +144,14 @@ export function renderRouteMap(container: HTMLElement, plan: TripPlan): RouteMap
       });
   });
 
-  // Estaciones con pin numerado según el plan de cargas.
+  // Cabinas de peaje sobre la ruta.
+  for (const b of plan.tollBooths) {
+    L.marker([b.coord.lat, b.coord.lng], { icon: tollIcon(), zIndexOffset: -100 })
+      .addTo(map)
+      .bindPopup(tollPopup(b), { closeButton: false });
+  }
+
+  // Estaciones con pin según el plan de cargas.
   const stationMarkers = new Map<string, L.Marker>();
   const allStations = [...plan.refuelLegs.flatMap((l) => l.stations), ...plan.extraStations];
   for (const s of allStations) {

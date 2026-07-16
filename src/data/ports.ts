@@ -21,6 +21,7 @@ import type {
   Place,
   Route,
   Station,
+  TollEstimate,
 } from '../domain/types';
 
 /** Catálogo de autos argentinos + fallback por categoría. */
@@ -71,9 +72,12 @@ export interface FuelPriceService {
   nationalAverage(fuel: FuelType): Promise<FuelPrice>;
 }
 
-/** Peajes del recorrido. Mock por ahora; puede venir del provider de rutas. */
+/**
+ * Peajes del recorrido. Devuelve las cabinas que caen sobre la ruta (de un
+ * dataset curado con tarifas publicadas) y el total. No es una API en vivo.
+ */
 export interface TollService {
-  estimateTolls(route: Route): Promise<number>;
+  tollsForRoute(route: Route): Promise<TollEstimate>;
 }
 
 /** Contenedor de todos los servicios: se inyecta una sola vez en el arranque. */

@@ -158,11 +158,20 @@ export async function planTrip(services: Services, input: TripInput): Promise<Tr
       )
     : await services.directions.route(origin, outboundStops, destination, input.roundTrip);
 
-  const [stations, refPrices, tolls] = await Promise.all([
+  const [stations, refPrices, tollEstimate] = await Promise.all([
     services.stations.stationsAlongRoute(route, car.suggestedFuel),
     referencePrices(services, destination.provinceId),
-    services.tolls.estimateTolls(route),
+    services.tolls.tollsForRoute(route),
   ]);
 
-  return computeTrip({ route, car, stations, referencePrices: refPrices, tolls });
+  return computeTrip({
+    route,
+    car,
+    stations,
+    referencePrices: refPrices,
+    tolls: tollEstimate.total,
+    tollBooths: tollEstimate.booths,
+    tollsUpdatedAt: tollEstimate.updatedAt,
+    tollsSource: tollEstimate.source,
+  });
 }
